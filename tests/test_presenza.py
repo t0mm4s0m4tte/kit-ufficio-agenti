@@ -178,15 +178,15 @@ class TestClientPresenza(unittest.TestCase):
     def test_risolvi_config_da_env_file_e_fallback_web_host(self):
         with tempfile.TemporaryDirectory() as d:
             env = Path(d) / "env"
-            env.write_text("ORDINI_HMAC_KEY=chiave-1\nWEB_HOST=100.113.116.92\nWEB_PORT=8090\n", encoding="utf-8")
+            env.write_text("ORDINI_HMAC_KEY=chiave-1\nWEB_HOST=198.51.100.2\nWEB_PORT=8090\n", encoding="utf-8")
             url, chiave = risolvi_config_presenza(env_path=env, environ={})
-            self.assertEqual((url, chiave), ("http://100.113.116.92:8090", "chiave-1"))
+            self.assertEqual((url, chiave), ("http://198.51.100.2:8090", "chiave-1"))
 
             url2, chiave2 = risolvi_config_presenza(
                 env_path=env,
-                environ={"EDIFICIO_URL": "http://100.1.2.3:9090/", "ORDINI_HMAC_KEY": "override"},
+                environ={"EDIFICIO_URL": "http://198.51.100.3:9090/", "ORDINI_HMAC_KEY": "override"},
             )
-            self.assertEqual((url2, chiave2), ("http://100.1.2.3:9090", "override"))
+            self.assertEqual((url2, chiave2), ("http://198.51.100.3:9090", "override"))
 
     def test_invia_presenza_firma_richiesta_e_non_esplode_se_offline(self):
         catturate = []
@@ -208,14 +208,14 @@ class TestClientPresenza(unittest.TestCase):
             tipo="riunione",
             commessa="Landing Pages",
             nota="Design",
-            url="http://100.113.116.92:8090",
+            url="http://198.51.100.2:8090",
             chiave="segreto-hmac",
             urlopen=fake_open,
         )
         self.assertTrue(ok)
         self.assertEqual(len(catturate), 1)
         url, hdrs, raw, _ = catturate[0]
-        self.assertEqual(url, "http://100.113.116.92:8090/api/telemetria-esterna")
+        self.assertEqual(url, "http://198.51.100.2:8090/api/telemetria-esterna")
         hdrs_low = {k.lower(): v for k, v in hdrs.items()}
         self.assertTrue(verifica_firma_richiesta("segreto-hmac", hdrs_low["x-timestamp"], raw, hdrs_low["x-firma"]))
         corpo = json.loads(raw.decode("utf-8"))
@@ -231,7 +231,7 @@ class TestClientPresenza(unittest.TestCase):
             raise urllib.error.URLError("connessione rifiutata")
 
         self.assertFalse(
-            invia_presenza("avvia", "design-ui-designer", url="http://100.1.2.3:8090", chiave="k", urlopen=offline)
+            invia_presenza("avvia", "design-ui-designer", url="http://198.51.100.3:8090", chiave="k", urlopen=offline)
         )
 
     def test_cli_presenza(self):

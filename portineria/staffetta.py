@@ -56,8 +56,8 @@ def scegli_revisore(
 def prompt_revisione(autore: dict, piano_nome: str, richiesta: str, bozza: str) -> str:
     return (
         "Controllo rapido QA (staffetta autore -> revisore).\n"
-        f"Richiesta originale di Tommy:\n{richiesta}\n\n"
+        f"Richiesta originale dell'operatore:\n{richiesta}\n\n"
         f"Bozza prodotta da {autore['nome']} ({piano_nome}):\n{bozza}\n\n"
         "Verifica accuratezza, completezza ed eventuali rischi o errori. "
-        "Restituisci direttamente la versione finale migliorata e pronta per Tommy in italiano."
+        "Restituisci direttamente la versione finale migliorata e pronta per l'operatore in italiano."
     )

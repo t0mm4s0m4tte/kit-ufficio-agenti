@@ -109,7 +109,7 @@ class TestStaffetta(unittest.TestCase):
         self.assertEqual([cid for cid, _ in self.chiamate],
                          ["engineering-backend-architect", "testing-reality-checker"])
         self.assertIn("Bozza endpoint /api/ordini", self.chiamate[1][1])
-        # A Tommy arriva SOLO la versione finale dopo la revisione (non la bozza intermedia)
+        # A Operatore arriva SOLO la versione finale dopo la revisione (non la bozza intermedia)
         self.assertEqual(len(self.inviati), 1)
         self.assertIn("Versione finale verificata: /api/ordini OK", self.inviati[0][1])
         self.assertIn("Reality Checker", self.inviati[0][1])
@@ -144,7 +144,7 @@ class TestStaffetta(unittest.TestCase):
         self._attendi()
 
         self.assertEqual([cid for cid, _ in self.chiamate], ["marketing-copy", "marketing-growth-hacker"])
-        # Nonostante il fallimento del revisore, Tommy riceve la bozza con nota di fallback
+        # Nonostante il fallimento del revisore, Operatore riceve la bozza con nota di fallback
         testo_totale = "\n".join(t for _, t, _ in self.inviati)
         self.assertIn("Bozza landing page", testo_totale)
         self.assertEqual(self.uff.flussi_attivi(), [])

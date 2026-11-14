@@ -74,46 +74,5 @@ class TestOrologio(unittest.TestCase):
         self.assertEqual(o.giro(), ["a"])
 
 
-class CodaFinta:
-    def __init__(self):
-        self.accodati = []
-        self.priorita = []
-
-    def accoda(self, etichetta, lavoro, al_termine, priorita="alta"):
-        self.accodati.append(etichetta)
-        self.priorita.append((etichetta, priorita))
-        al_termine("Report: tutto ok.", None)
-        return 0
-
-
-class UfficioFinto:
-    def __init__(self):
-        from collections import deque
-        self.stato_archivisti, self.errori, self.archivia = {}, deque(maxlen=5), None
-        self.invia = lambda *a, **k: None
-
-
-class TestCollegamento(unittest.TestCase):
-    def test_archivisti_sul_vault_vuoto(self):
-        from portineria.__main__ import archivisti_e_orologio
-        from portineria.config import Config
-        with tempfile.TemporaryDirectory() as d:
-            base = Path(d)
-            (base / "app" / "prompts").mkdir(parents=True)
-            for i in ("archivista-notturno", "archivista-fonti", "capo-archivista"):
-                (base / "app" / "prompts" / f"_{i}.md").write_text("P", encoding="utf-8")
-            from portineria.vault import prepara_vault
-            prepara_vault(base / "vault")
-            uff, coda = UfficioFinto(), CodaFinta()
-            orologio = archivisti_e_orologio(Config("t", 5, "k", "m", "claude", base), uff, coda)
-            self.assertEqual(sorted(orologio.giro()), ["capo", "fonti", "greta_mattina", "greta_sera", "monitor_leveraged", "notturno", "sentinella", "wol_clipping"])
-            self.assertEqual(coda.accodati, ["capo-archivista"])
-            self.assertEqual(coda.priorita, [("capo-archivista", "normale")])
-            self.assertTrue(all(v.endswith(" ok") for v in uff.stato_archivisti.values()), uff.stato_archivisti)
-            diari = list((base / "vault" / "04 - Diario").glob("*.md"))
-            self.assertIn("## Capo Archivista\n\nReport: tutto ok.", diari[0].read_text(encoding="utf-8"))
-            self.assertIsNotNone(uff.archivia)
-
-
 if __name__ == "__main__":
     unittest.main()

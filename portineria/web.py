@@ -141,16 +141,12 @@ def avvia_web(host: str, porta: int, ufficio, statici: Path, avvisi: AvvisiWeb) 
                                  "chat": ufficio.cron.ultimi(agente_id, 20), "avvisi": avvisi.ultimi()})
 
         def _statico(self, percorso: str) -> None:
-            # il percorso e' gia' decodificato: si risolve e deve restare dentro la cartella statici (o greta-3d)
+            # il percorso e' gia' decodificato: si risolve e deve restare dentro la cartella statici
             try:
                 if "\0" in percorso:
                     raise ValueError
-                if percorso.startswith("/greta-3d/"):
-                    base = (radice.parent / "greta-3d").resolve()
-                    rel = percorso.removeprefix("/greta-3d/") or "index.html"
-                else:
-                    base = radice
-                    rel = percorso.lstrip("/") or "index.html"
+                base = radice
+                rel = percorso.lstrip("/") or "index.html"
                 f = (base / rel).resolve()
                 valido = f.is_relative_to(base) and f.suffix in TIPI and f.is_file()
             except (OSError, ValueError):

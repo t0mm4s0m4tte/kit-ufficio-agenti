@@ -29,10 +29,6 @@ def _piano(org: Organigramma, p: dict) -> dict:
     if capo and capo["id"] not in usati:
         metti(capo, -PASSO * 2, 0 if direttore else -PASSO * 2, 1.5)
 
-    # la segretaria personale siede nell'ufficio vetrato accanto al Direttore (x < 0: fuori dalla griglia)
-    segretaria = next((a for a in agenti if a["id"] == "segretaria"), None)
-    if segretaria and direttore and segretaria["id"] not in usati:
-        metti(segretaria, -PASSO * 2, 0, 1.2)
 
     # gruppi: un gruppo per team (comanager per primo), poi gli agenti senza team
     gruppi = []

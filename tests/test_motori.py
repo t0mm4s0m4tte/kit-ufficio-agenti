@@ -7,7 +7,7 @@ from portineria.config import Config
 from portineria.motori import (ErroreMotore, LimiteClaude, QuotaGeminiEsaurita, TimeoutAgente, argomenti_claude,
                                chiedi_claude, chiedi_gemini, chiedi_rapido, testo_claude)
 
-CFG = Config("t", 5, "k", "gemini-2.5-flash", "claude", PurePosixPath("/home/tommy/ufficio"))
+CFG = Config("t", 5, "k", "gemini-2.5-flash", "claude", PurePosixPath("/home/utente/ufficio"))
 
 
 class TestMotori(unittest.TestCase):
@@ -16,10 +16,10 @@ class TestMotori(unittest.TestCase):
 
         def post(url, headers, corpo, timeout):
             visto.update(url=url, headers=headers, corpo=corpo, timeout=timeout)
-            return 200, {"candidates": [{"content": {"parts": [{"text": "Ciao "}, {"text": "Tommy"}]}}]}
+            return 200, {"candidates": [{"content": {"parts": [{"text": "Ciao "}, {"text": "Operatore"}]}}]}
 
         r = chiedi_gemini("SYS", [{"ruolo": "utente", "testo": "a"}, {"ruolo": "agente", "testo": "b"}], "c", CFG, post=post)
-        self.assertEqual(r, "Ciao Tommy")
+        self.assertEqual(r, "Ciao Operatore")
         self.assertIn("gemini-2.5-flash:generateContent", visto["url"])
         self.assertEqual(visto["headers"]["x-goog-api-key"], "k")
         self.assertEqual(visto["corpo"]["systemInstruction"], {"parts": [{"text": "SYS"}]})
@@ -72,19 +72,19 @@ class TestMotori(unittest.TestCase):
         self.assertNotIn("20128", urls[0])
 
     def test_argomenti_claude_abilitano_bash_e_negano_segreti(self):
-        a = argomenti_claude(PurePosixPath("/home/tommy/ufficio/app/prompts/x.md"), CFG)
+        a = argomenti_claude(PurePosixPath("/home/utente/ufficio/app/prompts/x.md"), CFG)
         self.assertEqual(a[:5], ["claude", "-p", "--output-format", "text", "--append-system-prompt-file"])
         self.assertIn("--permission-mode", a)
         self.assertEqual(a[a.index("--permission-mode") + 1], "acceptEdits")
         negati = a[a.index("--disallowedTools") + 1:]
         self.assertNotIn("Bash", negati)
-        for regola in ("Read(//home/tommy/ufficio/.env)", "Edit(//home/tommy/ufficio/.env)",
-                       "Read(//home/tommy/.ssh/**)", "Read(//home/tommy/.claude/**)",
-                       "Edit(//home/tommy/ufficio/app/**)", "Edit(//home/tommy/ufficio/stato/**)",
-                       "Bash(*/home/tommy/ufficio/.env*)"):
+        for regola in ("Read(//home/utente/ufficio/.env)", "Edit(//home/utente/ufficio/.env)",
+                       "Read(//home/utente/.ssh/**)", "Read(//home/utente/.claude/**)",
+                       "Edit(//home/utente/ufficio/app/**)", "Edit(//home/utente/ufficio/stato/**)",
+                       "Bash(*/home/utente/ufficio/.env*)"):
             self.assertIn(regola, negati)
         # Claude Code 2.1.3xx rifiuta Write(percorso): Edit(percorso) copre tutte le scritture
-        self.assertIn("Edit(//home/tommy/ufficio/vault/**)", a)
+        self.assertIn("Edit(//home/utente/ufficio/vault/**)", a)
         self.assertFalse(any(x.startswith("Write(") for x in a))
         permessi = a[a.index("--allowedTools"):a.index("--disallowedTools")]
         self.assertIn("Bash", permessi)
@@ -102,7 +102,7 @@ class TestMotori(unittest.TestCase):
             p = Path(tmp) / "p.md"
             p.write_text("PROMPT AGENTE", encoding="utf-8")
             cfg = replace(CFG, claude_token="TOKCLAUDE", ordini_hmac_key="chiave-hmac",
-                          esecutore_url="http://100.121.89.90:8771/")
+                          esecutore_url="http://198.51.100.1:8771/")
             chiamate = []
 
             def post_ok(url, headers, corpo, timeout):
@@ -112,11 +112,11 @@ class TestMotori(unittest.TestCase):
             r = chiedi_claude(p, [{"ruolo": "utente", "testo": "a"}], "test", cfg,
                               run=lambda *a, **k: self.fail("non doveva usare il Pi"), post=post_ok)
             self.assertEqual(r, "eseguito su pc")
-            self.assertEqual(chiamate[0][0], "http://100.121.89.90:8771/chiedi")
+            self.assertEqual(chiamate[0][0], "http://198.51.100.1:8771/chiedi")
             self.assertIn("X-Timestamp", chiamate[0][1])
             self.assertIn("X-Firma", chiamate[0][1])
             self.assertEqual(chiamate[0][2]["sistema"], "PROMPT AGENTE")
-            self.assertEqual(chiamate[0][2]["vault_pi"], "/home/tommy/ufficio/vault")
+            self.assertEqual(chiamate[0][2]["vault_pi"], "/home/utente/ufficio/vault")
             self.assertEqual(chiamate[0][2]["claude_token"], "TOKCLAUDE")
 
             # Se il PC è spento/irraggiungibile ripiega sul Pi locale
@@ -140,31 +140,11 @@ class TestMotori(unittest.TestCase):
             with self.assertRaises(LimiteClaude):
                 chiedi_claude(p, [], "ciao", cfg, run=run_pi, post=post_limite)
 
-    def test_segretaria_senza_strumenti_e_mai_sul_pc(self):
-        # riceve l'agenda con testo di terzi (inviti): nessuno strumento, e nemmeno il PC che ne ha di più
-        percorso = PurePosixPath("/home/tommy/ufficio/app/prompts/_segretaria.md")
-        a = argomenti_claude(percorso, CFG)
-        self.assertEqual(a[a.index("--tools"):], ["--tools", ""])
-        for vietato in ("--allowedTools", "--permission-mode"):
-            self.assertNotIn(vietato, a)
-        self.assertNotIn("Bash", a)
-        cfg = replace(CFG, ordini_hmac_key="k", esecutore_url="http://100.121.89.90:8771")
-        viste = []
-
-        def run(args, **k):
-            viste.append(args)
-            return subprocess.CompletedProcess(args, 0, "dal pi", "")
-
-        r = chiedi_claude(percorso, [], "ciao", cfg, run=run,
-                          post=lambda *a, **k: self.fail("la segretaria non va mandata al PC"))
-        self.assertEqual((r, len(viste)), ("dal pi", 1))
-        self.assertIn("--tools", viste[0])
-
     def test_segreti_negati_agli_altri_agenti(self):
-        a = argomenti_claude(PurePosixPath("/home/tommy/ufficio/app/prompts/x.md"), CFG)
+        a = argomenti_claude(PurePosixPath("/home/utente/ufficio/app/prompts/x.md"), CFG)
         negati = a[a.index("--disallowedTools") + 1:]
-        for regola in ("Read(//home/tommy/ufficio/segreti/**)", "Edit(//home/tommy/ufficio/segreti/**)",
-                       "Bash(*/home/tommy/ufficio/segreti*)"):
+        for regola in ("Read(//home/utente/ufficio/segreti/**)", "Edit(//home/utente/ufficio/segreti/**)",
+                       "Bash(*/home/utente/ufficio/segreti*)"):
             self.assertIn(regola, negati)
 
     def test_claude_ambiente_ridotto(self):
@@ -174,7 +154,7 @@ class TestMotori(unittest.TestCase):
             visto.update(k)
             return subprocess.CompletedProcess(args, 0, "ok", "")
 
-        cfg = Config("t", 5, "k", "gemini-2.5-flash", "claude", PurePosixPath("/home/tommy/ufficio"), "TOKCLAUDE")
+        cfg = Config("t", 5, "k", "gemini-2.5-flash", "claude", PurePosixPath("/home/utente/ufficio"), "TOKCLAUDE")
         chiedi_claude(PurePosixPath("p.md"), [], "t", cfg, run=run)
         self.assertEqual(visto["env"]["CLAUDE_CODE_OAUTH_TOKEN"], "TOKCLAUDE")
         self.assertEqual(set(visto["env"]) - {"PATH", "HOME", "LANG", "CLAUDE_CODE_OAUTH_TOKEN"}, set())
@@ -199,7 +179,7 @@ class TestMotori(unittest.TestCase):
             return subprocess.CompletedProcess(args, 0, " ok \n", "")
 
         self.assertEqual(chiedi_claude(PurePosixPath("p.md"), [], "ciao", CFG, run=run), "ok")
-        self.assertEqual((visto["input"], visto["timeout"], visto["cwd"]), ("ciao", 300, "/home/tommy/ufficio/vault"))
+        self.assertEqual((visto["input"], visto["timeout"], visto["cwd"]), ("ciao", 300, "/home/utente/ufficio/vault"))
 
     def test_claude_timeout(self):
         def run(*a, **k):
@@ -235,7 +215,7 @@ class TestMotori(unittest.TestCase):
 
     def test_testo_claude_con_storia(self):
         t = testo_claude([{"ruolo": "utente", "testo": "a"}, {"ruolo": "agente", "testo": "b"}], "c")
-        self.assertEqual(t, "Conversazione precedente:\nTommy: a\nTu: b\n\nNuovo messaggio di Tommy:\nc")
+        self.assertEqual(t, "Conversazione precedente:\nOperatore: a\nTu: b\n\nNuovo messaggio di Operatore:\nc")
         self.assertEqual(testo_claude([], "c"), "c")
 
 

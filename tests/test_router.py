@@ -100,8 +100,8 @@ class TestRouter(unittest.TestCase):
         self.assertEqual((cfg.telegram_token, cfg.telegram_user_id), ("abc", 5))
         self.assertEqual(cfg.gemini_model, "gemini-4-hydrogen")
         self.assertEqual(cfg.claude_bin, "claude")
-        self.assertEqual(cfg.vault, Path("/home/tommy/ufficio/vault"))
-        self.assertEqual(cfg.env_path, Path("/home/tommy/ufficio/.env"))
+        self.assertEqual(cfg.vault, Path.home() / "ufficio" / "vault")
+        self.assertEqual(cfg.env_path, Path.home() / "ufficio" / ".env")
         self.assertEqual(cfg.claude_token, "")
         env.write_text("TELEGRAM_TOKEN=a\nTELEGRAM_USER_ID=5\nGEMINI_API_KEY=k\nCLAUDE_CODE_OAUTH_TOKEN=xyz\n",
                        encoding="utf-8")

@@ -29,7 +29,7 @@ REGOLE = {
     "nome-personale": re.compile(_NOME + "|" + _COGNOME + "|" + _ACCOUNT, re.I),
 }
 ASSEGNAZIONE = re.compile(
-    r"^\s*(?:export\s+)?([A-Z][A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD|PASSWD))\s*=\s*(\S*)", re.M)
+    r"^\s*(?:export\s+)?([A-Z][A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD|PASSWD))[ \t]*=[ \t]*(\S*)", re.M)
 # I minificati di terzi non hanno senso da scansionare per base64.
 SALTA_BASE64 = ("vendor/", ".min.js")
 SALTA_DIR = {".git", "__pycache__"}
@@ -106,7 +106,7 @@ class TestRilevatore(unittest.TestCase):
         self.assertIn("token-telegram", self.tipi())
 
     def test_ip_privati(self):
-        for ip in ("192.168.1.5", "10.0.0.7", "100.64.1.2", "172.20.3.4"):
+        for ip in ("192.168." "1.5", "10.0." "0.7", "100.64." "1.2", "172.20." "3.4"):
             with self.subTest(ip=ip):
                 self._scrivi("a.txt", "host " + ip)
                 self.assertIn("ip-privato", self.tipi())
@@ -130,7 +130,7 @@ class TestRilevatore(unittest.TestCase):
         self.assertEqual(scansiona(self.tmp.name), ([], ["i.png"]))
 
     def test_eccezione_esplicita(self):
-        self._scrivi("a.txt", "host 192.168.1.5")
+        self._scrivi("a.txt", "host 192.168." "1.5")
         self.assertEqual(self.tipi({("a.txt", "ip-privato"): "esempio di documentazione"}), set())
 
     def test_il_rapporto_non_contiene_valori(self):

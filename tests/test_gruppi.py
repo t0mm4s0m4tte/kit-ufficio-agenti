@@ -84,7 +84,7 @@ class TestGruppi(BaseUfficio):
         self.assertIn("MEMBRI DELLA STANZA:\nseo-1 | marketing |", self.chiamate_claude[0][2])
         self.assertIn("Bash", self.chiamate_claude[0][2])
         self.assertIn('"coinvolgi"', self.chiamate_claude[0][2])
-        self.assertEqual(self.chiamate_gemini[0][2], "b1\n\nMessaggio di Tommy nella stanza: serve una strategia SEO")
+        self.assertEqual(self.chiamate_gemini[0][2], "b1\n\nMessaggio dell'operatore nella stanza: serve una strategia SEO")
         self.assertEqual(len(self.inviati), 4)
         self.assertTrue(all(c == -100 and th == 7 for c, _, th in self.inviati))
         self.assertTrue(self.testi()[0].startswith("📣 SEO Specialist · comanager Marketing & Social\n\nCi pensiamo noi."))

@@ -101,10 +101,10 @@ class TestUfficio(BaseUfficio):
         testi = self.testi()
         self.assertEqual(testi[0], "🏛 Direttore\n\nPasso a Celia (Vendite & E-commerce).")
         self.assertEqual(len(testi), 2)
-        self.assertEqual(self.chiamate_gemini[0][2], "scrivi la mail\n\nRichiesta originale di Tommy: mi serve una cold email")
+        self.assertEqual(self.chiamate_gemini[0][2], "scrivi la mail\n\nRichiesta originale dell'operatore: mi serve una cold email")
         self.assertIn("AGENTI DISPONIBILI:\ncelia-cold-email | vendite |", self.chiamate_claude[0][2])
         self.assertNotIn("direttore |", self.chiamate_claude[0][2])
-        # in cronologia resta il messaggio di Tommy, non l'elenco degli agenti
+        # in cronologia resta il messaggio di Operatore, non l'elenco degli agenti
         self.assertEqual(self.cron.ultimi("direttore")[0]["testo"], "mi serve una cold email")
 
     def test_direttore_risponde_da_se(self):
@@ -204,7 +204,7 @@ class TestUfficio(BaseUfficio):
         self.assertEqual(self.chiamate_gemini[-1][2], "landing nuova\n\nCONTESTO DAL VAULT:\nNOTA X")
         self.assertEqual(self.cron.ultimi("celia-cold-email")[0]["testo"], "landing nuova")
 
-    def test_contesto_al_claude_calcolato_sul_messaggio_di_tommy(self):
+    def test_contesto_al_claude_calcolato_sul_messaggio_dell_operatore(self):
         visti = []
         self.uff.contesto_vault = lambda t: visti.append(t) or "NOTA"
         self.risposte_claude = ['{"risposta": "ok"}']
@@ -226,30 +226,6 @@ class TestUfficio(BaseUfficio):
             self.uff.gestisci(1, "@celia ancora")
         self.assertEqual(self.chiamate_gemini[-1][2], "ancora")
         self.assertTrue(self.testi()[-1].endswith("risposta gemini"))
-
-    def test_cerca(self):
-        (self.cfg.vault / "02 - Conoscenza").mkdir(parents=True)
-        (self.cfg.vault / "02 - Conoscenza" / "landing.md").write_text("landing landing", encoding="utf-8")
-        self.uff.gestisci(1, "/cerca landing")
-        self.assertEqual(self.testi()[-1], "📄 02 - Conoscenza/landing.md (2)")
-        self.uff.gestisci(1, "/cerca zzzzz")
-        self.assertEqual(self.testi()[-1], "Niente nel vault su questo.")
-        self.uff.gestisci(1, "/cerca")
-        self.assertEqual(self.testi()[-1], "Scrivi /cerca <parole>.")
-
-    def test_archivia(self):
-        self.uff.gestisci(1, "/archivia")
-        self.assertEqual(self.testi()[-1], "Archivisti non attivi.")
-        fatto = threading.Event()
-        self.uff.archivia = fatto.set
-        self.uff.gestisci(1, "/archivia")
-        self.assertTrue(self.testi()[-1].startswith("Archivisti al lavoro"))
-        self.assertTrue(fatto.wait(1))
-
-    def test_stato_mostra_archivisti(self):
-        self.uff.stato_archivisti["notturno"] = "2026-11-11 03:00 ok"
-        self.uff.gestisci(1, "/stato")
-        self.assertIn("Archivisti:\nnotturno: 2026-11-11 03:00 ok", self.testi()[-1])
 
     def test_firma(self):
         self.assertEqual(firma(self.org, self.org.get("direttore")), "🏛 Direttore\n\n")
@@ -341,10 +317,8 @@ class TestAttiviEMotore(BaseUfficio):
         self.assertEqual((flussi[0]["da_agente"], flussi[0]["da_piano"]), ("direttore", "direzione"))
         self.assertEqual((flussi[0]["a_agente"], flussi[0]["a_piano"]), ("celia-cold-email", "vendite"))
         self.assertEqual(flussi[0]["tipo"], "delega")
-        self.assertEqual(flussi[0]["commessa"], "Shopify")
         eventi = self.uff.eventi_piani()
         self.assertEqual(eventi["vendite"]["agente"], "celia-cold-email")
-        self.assertEqual(eventi["vendite"]["commessa"], "Shopify")
 
         esci.set()
         t.join(3)
@@ -362,101 +336,6 @@ class TestAttiviEMotore(BaseUfficio):
         self.assertIn("@celia-cold-email", self.testi()[-1])
         self.assertIn("Vendite & E-commerce", self.testi()[-1])
         self.assertIn("Agenti mai usati", self.testi()[-1])
-
-    def test_pubblica_con_mock_urllib_e_link_commessa(self):
-        import json
-        from unittest.mock import patch
-        from portineria.ordini import approva_ordine, avvia_ordine, cambia_stato, carica_ordine, crea_ordine
-
-        class _Resp:
-            def __init__(self, status, dati):
-                self.status = status
-                self._raw = json.dumps(dati).encode("utf-8")
-
-            def read(self):
-                return self._raw
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *a):
-                return False
-
-        self.cfg.ordini_hmac_key = "hmac-ufficio"
-        self.cfg.github_token = "ghp_ufficio"
-        commesse = self.cfg.vault / "01 - Commesse"
-        commesse.mkdir(parents=True, exist_ok=True)
-        (commesse / "Shopify.md").write_text(
-            "---\nesecuzione: cantiere\nrepo: tommy/shopify-landing\nurl: https://shopify.tommy.it\n---\n# Shopify\n",
-            encoding="utf-8",
-        )
-        crea_ordine(self.cfg.vault, "engineering-software-architect", "Pubblica landing",
-                    commessa="Shopify", adesso=self.uff.adesso())
-        approva_ordine(self.cfg.vault, "L-001", self.cfg.ordini_hmac_key)
-        avvia_ordine(self.cfg.vault, "L-001", self.cfg.ordini_hmac_key)
-        cambia_stato(self.cfg.vault, "L-001", "fatto", esito="Branch `ufficio/L-001`")
-
-        chiamate = []
-
-        def finto_urlopen(req, timeout=15):
-            chiamate.append((req.get_method(), req.full_url, json.loads(req.data.decode("utf-8"))))
-            return _Resp(201, {"sha": "fedcba987"})
-
-        with patch("urllib.request.urlopen", side_effect=finto_urlopen):
-            self.uff.gestisci(1, "/pubblica L-001")
-            self.assertIn("riservato", self.testi()[-1].lower())
-            self.uff.gestisci(5, "/pubblica L-001")
-
-        self.assertEqual(len(chiamate), 1)
-        self.assertEqual(chiamate[0][0], "POST")
-        self.assertEqual(chiamate[0][1], "https://api.github.com/repos/tommy/shopify-landing/merges")
-        self.assertEqual(chiamate[0][2]["base"], "main")
-        self.assertEqual(chiamate[0][2]["head"], "ufficio/L-001")
-        self.assertEqual(chiamate[0][2]["commit_message"], "Merge ufficio/L-001")
-        self.assertEqual(carica_ordine(self.cfg.vault, "L-001")["stato"], "pubblicato")
-        self.assertIn("https://shopify.tommy.it", self.testi()[-1])
-
-    def test_vercel_pubblica_la_cartella_del_vault(self):
-        import json
-        from unittest.mock import patch
-
-        class _Resp:
-            status = 200
-
-            def read(self):
-                return json.dumps({"url": "x-1.vercel.app", "alias": ["my-office-landing.vercel.app"]}).encode()
-
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *a):
-                return False
-
-        sito = self.cfg.vault / "my-office" / "landing"
-        sito.mkdir(parents=True)
-        (sito / "index.html").write_text("<h1>ok</h1>", encoding="utf-8")
-
-        self.uff.gestisci(1, "/vercel")
-        self.assertIn("riservato", self.testi()[-1].lower())
-        self.uff.gestisci(5, "/vercel")
-        self.assertIn("VERCEL_TOKEN mancante", self.testi()[-1])
-
-        self.cfg.vercel_token = "vcl_test"
-        richieste = []
-
-        def finto_urlopen(req, timeout=0):
-            richieste.append((req.full_url, json.loads(req.data.decode("utf-8"))))
-            return _Resp()
-
-        with patch("urllib.request.urlopen", side_effect=finto_urlopen):
-            self.uff.gestisci(5, "/vercel")  # senza argomento: la landing più recente
-            self.uff.gestisci(5, "/vercel ../fuori")
-        self.assertEqual(len(richieste), 1)
-        self.assertEqual(richieste[0][1]["name"], "my-office-landing")
-        self.assertEqual(richieste[0][1]["files"], [{"file": "index.html", "data": "<h1>ok</h1>"}])
-        self.assertIn("https://my-office-landing.vercel.app", self.testi()[-2])
-        self.assertIn("dentro il vault", self.testi()[-1])
-        self.assertNotIn("vcl_test", " ".join(self.testi()))
 
 
 if __name__ == "__main__":

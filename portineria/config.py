@@ -20,15 +20,7 @@ class Config:
     web_host: str = ""  # IP Tailscale del Pi; vuoto = edificio spento
     web_porta: int = 8090
     ordini_hmac_key: str = ""  # chiave per firmare gli ordini approvati, solo nel .env
-    github_token: str = ""  # token fine-grained limitato ai repo del Cantiere
-    vercel_token: str = ""  # token Vercel per /vercel (pubblica cartelle del vault), solo nel .env
-    vercel_team_id: str = ""  # facoltativo: team Vercel su cui pubblicare
-    pc_mac: str = ""  # MAC address scheda Realtek del PC per Wake-on-LAN
-    pc_ip: str = "100.121.89.90"  # IP Tailscale del PC Windows
-    pc_broadcast: str = "255.255.255.255"  # indirizzo broadcast LAN per magic packet WoL
-    ares_url: str = "http://127.0.0.1:3100"  # URL base dashboard ARES sul Pi
-    ares_psql_cmd: str = ""  # comando psql personalizzato (opzionale, es. 'psql service=ares_ro')
-    esecutore_url: str = ""  # es. http://100.121.89.90:8771 per eseguire Claude sul PC quando è acceso
+    esecutore_url: str = ""  # es. http://<IP_DEL_PC>:8771 per eseguire Claude sul PC quando è acceso
 
 
     @property
@@ -79,7 +71,7 @@ def carica_config(env_path: Path) -> Config:
         gemini_api_key=v["GEMINI_API_KEY"],
         gemini_model=v.get("GEMINI_MODEL") or "gemini-4-hydrogen",
         claude_bin=v.get("CLAUDE_BIN") or "claude",
-        base=Path(v.get("UFFICIO_DIR") or "/home/tommy/ufficio"),
+        base=Path(v.get("UFFICIO_DIR") or Path.home() / "ufficio"),
         claude_token=v.get("CLAUDE_CODE_OAUTH_TOKEN", ""),
         omniroute_url=v.get("OMNIROUTE_URL", ""),
         omniroute_key=v.get("OMNIROUTE_KEY", ""),
@@ -87,13 +79,5 @@ def carica_config(env_path: Path) -> Config:
         web_host=v.get("WEB_HOST", ""),
         web_porta=web_porta,
         ordini_hmac_key=v.get("ORDINI_HMAC_KEY", ""),
-        github_token=v.get("GITHUB_TOKEN", ""),
-        vercel_token=v.get("VERCEL_TOKEN", ""),
-        vercel_team_id=v.get("VERCEL_TEAM_ID", ""),
-        pc_mac=v.get("PC_MAC", ""),
-        pc_ip=v.get("PC_IP") or "100.121.89.90",
-        pc_broadcast=v.get("PC_BROADCAST") or "255.255.255.255",
-        ares_url=v.get("ARES_URL") or "http://127.0.0.1:3100",
-        ares_psql_cmd=v.get("ARES_PSQL_CMD", ""),
         esecutore_url=v.get("ESECUTORE_URL", ""),
     )

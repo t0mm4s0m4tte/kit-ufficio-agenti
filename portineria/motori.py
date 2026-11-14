@@ -111,7 +111,7 @@ def chiedi_rapido(sistema: str, storia: list[dict], testo: str, cfg: Config, pos
 
 # Agenti che ricevono testo scritto da altri (l'agenda dei calendari, con gli inviti): nessuno strumento e mai sul PC.
 # Un invito costruito ad arte non deve poter arrivare a Bash, WebFetch o ai file.
-SENZA_STRUMENTI = frozenset({"_segretaria.md"})
+SENZA_STRUMENTI: frozenset = frozenset()
 
 
 def senza_strumenti(prompt_path: PurePath) -> bool:
@@ -141,8 +141,8 @@ def argomenti_claude(prompt_path: PurePath, cfg: Config) -> list[str]:
 def testo_claude(storia: list[dict], testo: str) -> str:
     if not storia:
         return testo
-    righe = [f"{'Tommy' if m['ruolo'] == 'utente' else 'Tu'}: {m['testo']}" for m in storia]
-    return "Conversazione precedente:\n" + "\n".join(righe) + "\n\nNuovo messaggio di Tommy:\n" + testo
+    righe = [f"{'Operatore' if m['ruolo'] == 'utente' else 'Tu'}: {m['testo']}" for m in storia]
+    return "Conversazione precedente:\n" + "\n".join(righe) + "\n\nNuovo messaggio di Operatore:\n" + testo
 
 
 def e_limite_claude(returncode: int, stdout: str, stderr: str) -> bool:

@@ -273,8 +273,8 @@ class TestConfigWeb(unittest.TestCase):
             return carica_config(env)
 
     def test_valori_impostati(self):
-        cfg = self._carica("WEB_HOST=100.113.116.92\nWEB_PORT=9000\n")
-        self.assertEqual((cfg.web_host, cfg.web_porta), ("100.113.116.92", 9000))
+        cfg = self._carica("WEB_HOST=198.51.100.2\nWEB_PORT=9000\n")
+        self.assertEqual((cfg.web_host, cfg.web_porta), ("198.51.100.2", 9000))
 
     def test_default(self):
         cfg = self._carica("")
@@ -318,21 +318,6 @@ class TestCartellaEdificio(unittest.TestCase):
         self.assertIn("totale_claude", app_js)
         self.assertIn("mai_usati", app_js)
 
-    def test_scheda_segretaria_ha_avatar_video_e_frame(self):
-        cartella = Path(__file__).parent.parent / "edificio"
-        app_js = (cartella / "app.js").read_text(encoding="utf-8")
-        for nome in ("greta.mp4", "greta-portrait.webp", "greta-full.webp"):
-            p = cartella / "assets" / nome
-            self.assertTrue(p.is_file() and p.stat().st_size > 0, f"Manca asset web {p}")
-        for token in ("schedaAvatarGreta", "assets/greta.mp4", "assets/greta-portrait.webp", "assets/greta-full.webp"):
-            self.assertIn(token, app_js)
-
-    def test_assets_master_greta_salvati(self):
-        master = Path(__file__).parent.parent / "assets" / "greta"
-        for nome in ("greta.mp4", "greta-portrait.png", "greta-full.png"):
-            p = master / nome
-            self.assertTrue(p.is_file() and p.stat().st_size > 0, f"Manca asset master {p}")
-
 
 class TestEdificioInBackground(unittest.TestCase):
     def _gira(self, esiti):
@@ -345,7 +330,7 @@ class TestEdificioInBackground(unittest.TestCase):
             if e is not None:
                 raise e
         with self.assertLogs("portineria", level="DEBUG") as log:
-            avvia_edificio(avvia, "100.1.2.3", 8090, dormi=pause.append).join(3)
+            avvia_edificio(avvia, "198.51.100.3", 8090, dormi=pause.append).join(3)
         return len(chiamate), pause, [(r.levelname, r.getMessage(), r.exc_info is not None) for r in log.records]
 
     def test_ritenta_finche_l_ip_non_c_e(self):
@@ -354,7 +339,7 @@ class TestEdificioInBackground(unittest.TestCase):
         # il primo errore con l'eccezione, poi una riga DEBUG per tentativo, infine l'indirizzo
         self.assertEqual([(livello, eccezione) for livello, _, eccezione in log],
                          [("ERROR", True), ("DEBUG", False), ("INFO", False)])
-        self.assertEqual(log[-1][1], "Edificio su http://100.1.2.3:8090")
+        self.assertEqual(log[-1][1], "Edificio su http://198.51.100.3:8090")
 
     def test_errori_che_non_si_risolvono_da_soli_fermano_solo_l_edificio(self):
         for e in (OverflowError("porta"), ValueError("agenti su piani inesistenti")):

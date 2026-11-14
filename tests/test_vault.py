@@ -27,16 +27,16 @@ class TestVault(unittest.TestCase):
         self.assertIn(".obsidian/workspace*", (self.v / ".stignore").read_text(encoding="utf-8"))
 
     def test_nome_gia_preso_riceve_suffisso(self):  # Review Focus 3
-        (self.v / "Idea.md").write_text("di Tommy", encoding="utf-8")
+        (self.v / "Idea.md").write_text("di Operatore", encoding="utf-8")
         p = scrivi_nuova(self.v, "Idea", "nuova")
         self.assertEqual(p.name, "Idea (2).md")
         self.assertEqual(p.read_text(encoding="utf-8"), "nuova")
-        self.assertEqual((self.v / "Idea.md").read_text(encoding="utf-8"), "di Tommy")
+        self.assertEqual((self.v / "Idea.md").read_text(encoding="utf-8"), "di Operatore")
         self.assertEqual(scrivi_nuova(self.v, "Idea", "terza").name, "Idea (3).md")
 
     def test_nome_che_cambia_solo_maiuscole_riceve_suffisso(self):
         # sul Pi (ext4) "foo.md" e "Foo.md" sono due file: Syncthing su Windows andrebbe in conflitto
-        (self.v / "Foo.md").write_text("di Tommy", encoding="utf-8")
+        (self.v / "Foo.md").write_text("di Operatore", encoding="utf-8")
         nomi = {"Foo.md"}
         with mock.patch.object(Path, "exists", lambda self: self.name in nomi):
             self.assertEqual(nome_libero(self.v, "foo").name, "foo (2).md")
