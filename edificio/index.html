@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070b16">
+<title>Ufficio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;800&display=swap">
+<link rel="stylesheet" href="style.css">
+<script type="importmap">{"imports": {"three": "./vendor/three.module.min.js"}}</script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<header id="barra">
+  <button id="indietro" type="button" hidden>← Edificio</button>
+  <div class="insegna">
+    <h1 id="titolo">Ufficio</h1>
+    <p id="sottotitolo" aria-live="polite"></p>
+  </div>
+  <span class="ricerca">
+    <input id="cerca" type="search" placeholder="Cerca un agente…" aria-label="Cerca un agente" aria-controls="risultati" autocomplete="off">
+    <ul id="risultati" hidden aria-label="Risultati della ricerca"></ul>
+  </span>
+  <button id="btn-greta" type="button" hidden title="Apri la scheda di Greta">
+    <img src="assets/greta-portrait.webp" alt=""><span>Greta</span>
+  </button>
+  <button id="elenco" type="button" aria-pressed="false">Elenco</button>
+</header>
+<div id="avviso" role="status" hidden>Ufficio non raggiungibile</div>
+<main id="scena" aria-label="Edificio 3D dell'ufficio">
+  <div id="suggerimento" hidden></div>
+  <nav id="hud" class="vetro" hidden aria-label="Tabellone dei piani"></nav>
+  <div id="legenda" class="vetro" hidden aria-hidden="true"><span class="segno lavora"></span>lavora <span class="segno coda"></span>in coda</div>
+</main>
+<div id="lista" hidden aria-label="Elenco degli agenti"></div>
+<aside id="pannello" class="vetro" hidden tabindex="-1" aria-labelledby="pannello-titolo">
+  <header>
+    <h2 id="pannello-titolo"></h2>
+    <button id="chiudi-pannello" type="button" aria-label="Chiudi">✕</button>
+  </header>
+  <div id="pannello-corpo"></div>
+</aside>
+</body>
+</html>

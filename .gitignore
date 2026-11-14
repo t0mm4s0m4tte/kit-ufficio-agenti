@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+stato/
+.superpowers/
+ufficio-app.tgz
+.enola/
+deploy/esecutore.env
+.claude/worktrees/
+.playwright-mcp/
