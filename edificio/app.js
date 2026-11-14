@@ -458,86 +458,6 @@ const SPALLE = [-1, 1].map((l) => new THREE.Vector3(0.29 * l, 1.04, 0.02));
 const COLLO = 1.17;
 const SEDUTO = [-1.1, -1.1];  // braccia avanti, sulla scrivania
 
-let _gretaGLBPromise = null;
-async function caricaGretaGLB(url) {
-  if (!_gretaGLBPromise) {
-    _gretaGLBPromise = (async () => {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const buf = await res.arrayBuffer();
-      const dv = new DataView(buf);
-      if (dv.getUint32(0, true) !== 0x46546c67 || dv.getUint32(4, true) !== 2) throw new Error('GLB non valido');
-      let off = 12, gltf = null, bin = null;
-      while (off < buf.byteLength) {
-        const len = dv.getUint32(off, true), typ = dv.getUint32(off + 4, true), start = off + 8;
-        if (typ === 0x4e4f534a) gltf = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, start, len)));
-        else if (typ === 0x004e4942) bin = buf.slice(start, start + len);
-        off = start + len;
-      }
-      const TA = { 5120: Int8Array, 5121: Uint8Array, 5122: Int16Array, 5123: Uint16Array, 5125: Uint32Array, 5126: Float32Array };
-      const NC = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4, MAT4: 16 };
-      const readAcc = (idx) => {
-        const a = gltf.accessors[idx], bv = gltf.bufferViews[a.bufferView], T = TA[a.componentType], nc = NC[a.type];
-        const off0 = (bv.byteOffset || 0) + (a.byteOffset || 0), stride = bv.byteStride || 0, elemBytes = T.BYTES_PER_ELEMENT * nc;
-        if (!stride || stride === elemBytes) return new T(bin, off0, a.count * nc);
-        const out = new T(a.count * nc), view = new DataView(bin);
-        for (let i = 0; i < a.count; i++) {
-          const base = off0 + i * stride;
-          for (let c = 0; c < nc; c++) {
-            const p = base + c * T.BYTES_PER_ELEMENT;
-            if (T === Float32Array) out[i * nc + c] = view.getFloat32(p, true);
-            else if (T === Uint32Array) out[i * nc + c] = view.getUint32(p, true);
-            else if (T === Uint16Array) out[i * nc + c] = view.getUint16(p, true);
-            else out[i * nc + c] = view.getUint8(p);
-          }
-        }
-        return out;
-      };
-      const binBytes = new Uint8Array(bin);
-      const loadTex = async (ti, srgb) => {
-        if (!ti) return null;
-        const td = gltf.textures?.[ti.index];
-        const si = td?.extensions?.EXT_texture_webp?.source ?? td?.source;
-        const im = si != null ? gltf.images?.[si] : null;
-        if (!im || im.bufferView == null) return null;
-        const bv = gltf.bufferViews[im.bufferView], s = bv.byteOffset || 0;
-        const bmp = await createImageBitmap(new Blob([binBytes.subarray(s, s + bv.byteLength)], { type: im.mimeType || 'image/png' }));
-        const t = new THREE.Texture(bmp);
-        t.flipY = false;
-        t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
-        t.needsUpdate = true;
-        return t;
-      };
-      const mats = await Promise.all((gltf.materials || [{}]).map(async (md) => {
-        const p = md.pbrMetallicRoughness || {};
-        const [map, mr, norm] = await Promise.all([
-          loadTex(p.baseColorTexture, true), loadTex(p.metallicRoughnessTexture, false), loadTex(md.normalTexture, false),
-        ]);
-        return new THREE.MeshStandardMaterial({
-          color: p.baseColorFactor ? new THREE.Color(...p.baseColorFactor.slice(0, 3)) : new THREE.Color(0xffffff),
-          roughness: p.roughnessFactor ?? 1, metalness: p.metallicFactor ?? 0,
-          map, roughnessMap: mr, metalnessMap: mr, normalMap: norm,
-        });
-      }));
-      const grp = new THREE.Group();
-      for (const md of gltf.meshes || []) {
-        for (const pr of md.primitives || []) {
-          const g = new THREE.BufferGeometry();
-          if (pr.attributes.POSITION != null) g.setAttribute('position', new THREE.BufferAttribute(readAcc(pr.attributes.POSITION), 3));
-          if (pr.attributes.NORMAL != null) g.setAttribute('normal', new THREE.BufferAttribute(readAcc(pr.attributes.NORMAL), 3));
-          if (pr.attributes.TEXCOORD_0 != null) g.setAttribute('uv', new THREE.BufferAttribute(readAcc(pr.attributes.TEXCOORD_0), 2));
-          if (pr.indices != null) g.setIndex(new THREE.BufferAttribute(readAcc(pr.indices), 1));
-          const m = new THREE.Mesh(g, mats[pr.material ?? 0]);
-          m.castShadow = true; m.receiveShadow = true;
-          grp.add(m);
-        }
-      }
-      return grp;
-    })();
-  }
-  return (await _gretaGLBPromise).clone();
-}
-
 function robottini(p) {
   const n = p.agenti.length, gruppo = new THREE.Group(), r = { gruppo };
   for (const [parte, [geo, mat, pezzi]] of Object.entries(POSTAZIONE)) r[parte] = instanziato(geo, mat, n * pezzi.length);
@@ -559,24 +479,6 @@ function robottini(p) {
       r.braccia.setColorAt(2 * i + k, reparto);
     }
     r.libri.setColorAt(i, LIBRI[i % LIBRI.length]);
-    if (a.id === 'segretaria') {
-      r.gretaIndex = i;
-      r.gretaPos = { x: a.x, y: 0, z: a.z, angolo: 0, scala: a.scala };
-      caricaGretaGLB('/greta-3d/models/greta-rodin-opt.glb').then((modello) => {
-        if (gruppo.userData.smontato) return;
-        const box = new THREE.Box3().setFromObject(modello);
-        const h = Math.max(0.01, box.max.y - box.min.y);
-        const baseScale = (1.85 * a.scala) / h;
-        const wrap = new THREE.Group();
-        modello.scale.setScalar(baseScale);
-        modello.position.y = -box.min.y * baseScale;
-        wrap.add(modello);
-        r.gretaMesh = wrap;
-        gruppo.add(wrap);
-        const gp = r.gretaPos;
-        posa(r, i, gp.x, gp.y, gp.z, gp.angolo, gp.scala, {}, true);
-      }).catch(() => {});
-    }
   });
   luciRobot(r, p, new Set(), new Set());
   return r;
@@ -588,14 +490,6 @@ const _m = new THREE.Matrix4(), _h = new THREE.Matrix4(), _r = new THREE.Matrix4
 const _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3();
 function posa(r, i, x, y, z, angolo, s, { rollio = 0, cenno = 0, bracci = SEDUTO } = {}, carica = true) {
   let scalaInst = s;
-  if (r.gretaIndex === i) {
-    r.gretaPos = { x, y, z, angolo, scala: s };
-    if (r.gretaMesh) {
-      r.gretaMesh.position.set(x, y, z);
-      r.gretaMesh.rotation.set(0, angolo, rollio, 'YXZ');
-      scalaInst = 0;
-    }
-  }
   _m.compose(_v.set(x, y, z), _q.setFromEuler(_e.set(0, angolo, rollio, 'YXZ')), _s.setScalar(scalaInst));
   r.corpo.setMatrixAt(i, _m);
   // testa: ruota attorno al collo
@@ -2059,95 +1953,6 @@ function chiudiPannello() {
   daRidareFuoco = null;
 }
 
-function schedaAvatarGreta() {
-  const box = el('section', 'avatar-greta');
-  box.setAttribute('aria-label', 'Avatar 3D di Greta');
-  const cornice = el('div', 'avatar-cornice');
-  cornice.title = 'Clicca per cambiare dimensione';
-
-  const video = el('video', 'avatar-media');
-  video.src = 'assets/greta.mp4';
-  video.poster = 'assets/greta-portrait.webp';
-  video.loop = true;
-  video.muted = true;
-  video.playsInline = true;
-  video.preload = 'metadata';
-
-  const img = el('img', 'avatar-media');
-  img.alt = 'Greta, segretaria personale in stile 3D';
-  img.decoding = 'async';
-  cornice.append(video, img);
-
-  const controlli = el('div', 'avatar-controlli');
-  const meta = el('div', 'avatar-meta');
-  meta.append(el('strong', '', 'Greta · Piano 10'), el('span', '', 'Disegno 3D ufficiale'));
-
-  const tabs = el('div', 'avatar-tabs');
-  const azioni = el('div', 'avatar-azioni');
-  const modi = [
-    ['video', 'Video'],
-    ['ritratto', 'Ritratto'],
-    ['intera', 'Figura'],
-  ];
-  const bottoniModo = {};
-  let modoCorrente = RIDOTTO ? 'ritratto' : 'video';
-
-  const btnAudio = bottone('🔇 Audio', '', () => {
-    if (modoCorrente !== 'video') setModo('video');
-    video.muted = !video.muted;
-    aggiornaAudio();
-    if (video.paused) video.play().catch(() => {});
-  });
-
-  const btnEspandi = bottone('⤢ Grande', '', () => {
-    const aperto = box.classList.toggle('espanso');
-    btnEspandi.setAttribute('aria-pressed', String(aperto));
-    btnEspandi.textContent = aperto ? '⤡ Riduci' : '⤢ Grande';
-  });
-  btnEspandi.setAttribute('aria-pressed', 'false');
-  cornice.addEventListener('click', () => btnEspandi.click());
-
-  function aggiornaAudio() {
-    const attivo = !video.muted;
-    btnAudio.textContent = attivo ? '🔊 Attivo' : '🔇 Audio';
-    btnAudio.setAttribute('aria-pressed', String(attivo));
-  }
-
-  function setModo(modo) {
-    modoCorrente = modo;
-    cornice.dataset.modo = modo;
-    for (const [chiave, b] of Object.entries(bottoniModo)) {
-      b.setAttribute('aria-pressed', String(chiave === modo));
-    }
-    const usaVideo = modo === 'video';
-    video.hidden = !usaVideo;
-    img.hidden = usaVideo;
-    if (usaVideo) {
-      video.play().catch(() => {});
-    } else {
-      video.pause();
-      if (!video.muted) {
-        video.muted = true;
-        aggiornaAudio();
-      }
-      img.src = modo === 'intera' ? 'assets/greta-full.webp' : 'assets/greta-portrait.webp';
-    }
-  }
-
-  for (const [chiave, etichetta] of modi) {
-    const b = bottone(etichetta, '', () => setModo(chiave));
-    bottoniModo[chiave] = b;
-    tabs.append(b);
-  }
-  azioni.append(btnAudio, btnEspandi);
-  controlli.append(meta, tabs, azioni);
-  box.append(cornice, controlli);
-
-  aggiornaAudio();
-  setModo(modoCorrente);
-  return box;
-}
-
 function apriAgente(id) {
   const a = agentiPerId.get(id);
   if (!a) return;
@@ -2219,7 +2024,7 @@ function schedaAgente(d, corpo, aggiorna) {
     }
   });
   campoMotore.append(etichettaMotore, motore);
-  const blocchi = d.id === 'segretaria' ? [schedaAvatarGreta()] : [];
+  const blocchi = [];
   blocchi.push(info, el('p', 'descrizione', d.descrizione || ''), campoMotore, erroreMotore);
   corpo.replaceChildren(...blocchi);
 
@@ -2395,10 +2200,6 @@ function apriStanza(id) {
   const s = edificio?.stanze.find((x) => x.id === id);
   if (!s) return;
   estrai(null);  // toccando una stanza col piano estratto, il piano rientra
-  if (id === 'palestra' && s.link?.[0]?.url) {
-    window.open(s.link[0].url, '_blank', 'noopener,noreferrer');
-    return;
-  }
   apriPannello(s.nome);
   if (!s.link.length) return $('pannello-corpo').append(el('p', 'tenue', 'Ancora vuota'));
   const ul = el('ul', 'link');
@@ -2417,10 +2218,6 @@ function apriStanza(id) {
 
 $('chiudi-pannello').addEventListener('click', chiudiPannello);
 $('indietro').addEventListener('click', tornaFuori);
-$('btn-greta')?.addEventListener('click', () => {
-  mostraElenco(false);
-  volaVerso('segretaria');
-});
 addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   $('risultati').hidden = true;
@@ -2743,7 +2540,6 @@ async function avvia() {
       agentiPerId.set(a.id, a);
     }
   }
-  if ($('btn-greta')) $('btn-greta').hidden = !agentiPerId.has('segretaria');
   costruisciEsterno();
   tornaFuori();
   applicaStato();

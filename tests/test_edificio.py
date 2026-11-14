@@ -57,32 +57,8 @@ class TestEdificio(unittest.TestCase):
         self.assertEqual(comando_claude({"fonte": "founder", "id": "founder-board", "nome": "f"}), "/founder-board")
         self.assertIsNone(comando_claude({"fonte": "ufficio", "id": "direttore", "nome": "d"}))
 
-    def test_stanze(self):
-        with tempfile.TemporaryDirectory() as t:
-            vault = Path(t)
-            for rel in ("01 - Commesse/Shopify.md", "02 - Conoscenza/a.md", "99 - Fonti/x.md", ".obsidian/y.md"):
-                f = vault / rel
-                f.parent.mkdir(parents=True, exist_ok=True)
-                f.write_text("x", encoding="utf-8")
-            s = stanze(vault, "198.51.100.2")
-            self.assertEqual([x["id"] for x in s], ["commesse", "palestra", "finanza", "archivio"])
-            self.assertEqual(s[0]["link"], [{"testo": "Shopify", "url": "obsidian://open?vault=Ufficio&file=01%20-%20Commesse/Shopify"}])
-            self.assertEqual(s[1]["link"][0]["url"], "http://198.51.100.2:3100")
-            self.assertEqual(s[2]["link"][0]["url"], "http://198.51.100.2:8080")
-            testi = [l["testo"] for l in s[3]["link"]]
-            self.assertNotIn("x", testi)
-            self.assertNotIn("y", testi)
-            self.assertIn("a", testi)
-
-    def test_archivio_le_dieci_piu_recenti(self):
-        with tempfile.TemporaryDirectory() as t:
-            vault = Path(t)
-            for i in range(12):
-                f = vault / f"n{i:02}.md"
-                f.write_text("x", encoding="utf-8")
-                os.utime(f, (1000 + i, 1000 + i))
-            testi = [l["testo"] for l in stanze(vault, "h")[3]["link"]]
-            self.assertEqual(testi, [f"n{i:02}" for i in range(11, 1, -1)])
+    def test_stanze_esterne_vuote(self):
+        self.assertEqual(stanze(Path("."), "127.0.0.1"), [])
 
 
 if __name__ == "__main__":

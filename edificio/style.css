@@ -73,15 +73,7 @@ button:disabled { opacity: .55; cursor: default; }
 #sottotitolo { margin: 6px 0 0; color: var(--tenue); font-size: 13px; }
 #sottotitolo:empty { display: none; }
 #indietro { margin-top: 6px; }
-.ricerca, #btn-greta, #elenco { margin-top: 6px; }
-#btn-greta {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 10px 4px 5px;
-}
-#btn-greta img {
-  width: 22px; height: 22px; border-radius: 50%; object-fit: cover; object-position: center 15%;
-  border: 1px solid rgba(226, 232, 240, .45);
-}
+.ricerca, #elenco { margin-top: 6px; }
 .ricerca { position: relative; }
 #cerca {
   width: 240px; padding: 6px 12px;
@@ -233,29 +225,6 @@ button:disabled { opacity: .55; cursor: default; }
 #pannello:focus { outline: none; }
 #pannello-corpo { flex: 1; overflow: auto; padding: 12px 12px 0; }
 #pannello-corpo > p { margin: 0 0 10px; }
-.avatar-greta {
-  display: grid; grid-template-columns: 112px 1fr; gap: 12px; align-items: start;
-  margin-bottom: 12px; padding: 10px; border-radius: 12px;
-  background: rgba(203, 213, 225, .05); border: 1px solid rgba(203, 213, 225, .25);
-}
-.avatar-greta.espanso { grid-template-columns: 1fr; }
-.avatar-cornice {
-  position: relative; aspect-ratio: 4 / 5; overflow: hidden; cursor: pointer;
-  border-radius: 10px; background: #b8b6b2; border: 1px solid rgba(255, 255, 255, .14);
-}
-.avatar-greta.espanso .avatar-cornice { aspect-ratio: 9 / 16; max-height: 360px; margin: 0 auto; width: 202px; }
-.avatar-media { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 12%; }
-.avatar-cornice[data-modo="intera"] .avatar-media { object-fit: contain; object-position: center; }
-.avatar-controlli { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.avatar-meta strong { display: block; font-size: 14px; }
-.avatar-meta span { display: block; font-size: 12px; color: var(--tenue); }
-.avatar-tabs, .avatar-azioni { display: flex; flex-wrap: wrap; gap: 5px; }
-.avatar-tabs button, .avatar-azioni button {
-  padding: 3px 8px; font-size: 12px; border-radius: 999px;
-}
-.avatar-tabs button[aria-pressed="true"], .avatar-azioni button[aria-pressed="true"] {
-  background: rgba(226, 232, 240, .16); border-color: var(--neon); color: var(--testo);
-}
 .info { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0 0 10px; }
 .info dt { color: var(--tenue); }
 .info dd { margin: 0; overflow-wrap: anywhere; }
@@ -313,7 +282,7 @@ select, textarea {
   #barra { gap: 6px; padding: 10px 10px 0; }
   #titolo { font-size: 30px; }
   #sottotitolo { font-size: 12px; margin-top: 3px; }
-  #indietro, .ricerca, #btn-greta, #elenco { margin-top: 2px; }
+  #indietro, .ricerca, #elenco { margin-top: 2px; }
   /* dentro un piano c'e' anche "← Edificio": l'insegna va a capo sotto i pulsanti, se no resta solo l'emoji */
   #barra:has(#indietro:not([hidden])) { flex-wrap: wrap; }
   #barra:has(#indietro:not([hidden])) .insegna { order: 1; flex-basis: 100%; }

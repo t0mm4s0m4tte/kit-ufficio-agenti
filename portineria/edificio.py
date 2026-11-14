@@ -1,5 +1,4 @@
 """Pianta dell'edificio 3D: posizioni degli omini per piano, stanze del piano terra, comando Claude Code."""
-import urllib.parse
 from pathlib import Path
 
 from portineria.organigramma import Organigramma
@@ -60,26 +59,9 @@ def pianta(org: Organigramma) -> dict:
     return {"piani": [_piano(org, p) for p in org.piani()]}
 
 
-def _url_nota(vault: Path, f: Path) -> str:
-    rel = f.relative_to(vault).with_suffix("").as_posix()
-    return "obsidian://open?vault=Ufficio&file=" + urllib.parse.quote(rel)
-
-
 def stanze(vault: Path, host: str) -> list[dict]:
-    vault = Path(vault)
-    commesse = sorted((vault / "01 - Commesse").glob("*.md"), key=lambda f: f.name)
-    recenti = sorted(
-        (f for f in vault.rglob("*.md")
-         if not any(part.startswith(".") for part in f.relative_to(vault).parts)
-         and f.relative_to(vault).parts[0] != "99 - Fonti"),
-        key=lambda f: f.stat().st_mtime, reverse=True)[:10]
-    return [
-        {"id": "commesse", "nome": "Sala Commesse",
-         "link": [{"testo": f.stem, "url": _url_nota(vault, f)} for f in commesse if not f.name.startswith(".")]},
-        {"id": "palestra", "nome": "Palestra", "link": [{"testo": "ARES", "url": f"http://{host}:3100"}]},
-        {"id": "finanza", "nome": "Finanza", "link": [{"testo": "Spese", "url": f"http://{host}:8080"}]},
-        {"id": "archivio", "nome": "Archivio", "link": [{"testo": f.stem, "url": _url_nota(vault, f)} for f in recenti]},
-    ]
+    """Stanze esterne dell'edificio (link a note o servizi). Il kit non ne ha: aggiungile qui."""
+    return []
 
 
 def comando_claude(agente: dict) -> str | None:
