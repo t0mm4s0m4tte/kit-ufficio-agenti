@@ -212,18 +212,18 @@ class TestComandiOrdiniUfficio(unittest.TestCase):
         self.assertEqual(elenca_ordini(self.cfg.vault, solo_aperti=True), [])
 
     def test_comando_ordine_da_telegram_solo_privato(self):
-        sito = self.cfg.vault / "my-office" / "landing-x"
+        sito = self.cfg.vault / "progetti" / "landing-x"
         sito.mkdir(parents=True)
-        self.uff.gestisci(99, "/ordine my-office/landing-x | Esegui npm test")
+        self.uff.gestisci(99, "/ordine progetti/landing-x | Esegui npm test")
         self.assertIn("riservato", self.inviati[-1][1].lower())
         self.assertEqual(elenca_ordini(self.cfg.vault), [])
 
-        self.uff.gestisci(5, "/ordine my-office/landing-x | Esegui npm test e build")
+        self.uff.gestisci(5, "/ordine progetti/landing-x | Esegui npm test e build")
         self.assertIn("L-001", self.inviati[-1][1])
         self.assertIn("/approva L-001", self.inviati[-1][1])
         o = carica_ordine(self.cfg.vault, "L-001")
         self.assertEqual(o["esecuzione"], "pc")
-        self.assertEqual(o["destinazione"], "my-office/landing-x")
+        self.assertEqual(o["destinazione"], "progetti/landing-x")
         self.assertEqual(o["piano"], "Esegui npm test e build")
 
         self.uff.gestisci(5, "/ordine @engineering-software-architect utente/repo | Aggiorna hero")

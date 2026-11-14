@@ -1,21 +1,18 @@
 """Scansione di segreti e dati personali su una cartella.
 
-Uso sulla copia:   KIT_DIR=<cartella> python -m unittest tests.test_scansione -v
-Senza KIT_DIR i test sulla cartella reale sono saltati; i test del
-rilevatore girano sempre. Il rapporto non contiene MAI i valori trovati:
-solo file, riga e tipo.
+Uso:   KIT_DIR=<cartella> KIT_TERMINI_PERSONALI="nome,cognome,account" python -m unittest tests.test_scansione -v
+KIT_TERMINI_PERSONALI è un elenco separato da virgole di parole che non devono comparire (nomi, account, email):
+sta fuori dal repository apposta, così il file non contiene i dati che cerca.
+Senza KIT_DIR i test sulla cartella reale sono saltati; i test del rilevatore girano sempre.
+Il rapporto non contiene MAI i valori trovati: solo file, riga e tipo.
 """
 import os
 import re
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
-# I termini sono composti a pezzi perché questo file non deve contenere,
-# a sua volta, i residui che cerca.
-_NOME = "tom" + "my"
-_COGNOME = "matte" + "ucci"
-_ACCOUNT = "t0mm4s" + "0m4tte"
 _SEGNAPOSTO = re.compile(r"^(<[A-Za-z0-9_ -]+>|)$")
 
 REGOLE = {
@@ -25,14 +22,21 @@ REGOLE = {
                                r"(?=[A-Za-z0-9+/]*[A-Z])[A-Za-z0-9+/]{44,}={0,2}(?![A-Za-z0-9+/=])"),
     "ip-privato": re.compile(r"(?<![\d.])(?:192\.168|10\.\d{1,3}|100\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01]))"
                              r"\.\d{1,3}(?:\.\d{1,3})?(?![\d.])"),
-    "percorso-personale": re.compile(r"/home/" + _NOME + r"|Users[\\/]+" + _NOME, re.I),
-    "nome-personale": re.compile(_NOME + "|" + _COGNOME + "|" + _ACCOUNT, re.I),
+    # percorsi di utenti veri: "utente" e i segnaposto <...> sono ammessi
+    "percorso-personale": re.compile(r"/home/(?!utente\b|<)[A-Za-z0-9._-]+|Users[\\/]+(?!utente\b|<|Public\b)[A-Za-z0-9._-]+"),
 }
 ASSEGNAZIONE = re.compile(
     r"^\s*(?:export\s+)?([A-Z][A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD|PASSWD))[ \t]*=[ \t]*(\S*)", re.M)
-# I minificati di terzi non hanno senso da scansionare per base64.
-SALTA_BASE64 = ("vendor/", ".min.js")
+SALTA_BASE64 = ("vendor/", ".min.js")  # minificati di terzi
 SALTA_DIR = {".git", "__pycache__"}
+
+
+def regole_attive():
+    regole = dict(REGOLE)
+    termini = [t.strip() for t in os.environ.get("KIT_TERMINI_PERSONALI", "").split(",") if t.strip()]
+    if termini:
+        regole["nome-personale"] = re.compile("|".join(re.escape(t) for t in termini), re.I)
+    return regole
 
 
 def _testo(percorso: Path):
@@ -50,7 +54,7 @@ def scansiona(radice, eccezioni=None):
 
     eccezioni: {(file_relativo, tipo): motivo}. Il motivo è obbligatorio.
     """
-    radice, eccezioni = Path(radice), eccezioni or {}
+    radice, eccezioni, regole = Path(radice), eccezioni or {}, regole_attive()
     residui, binari = [], []
     for p in sorted(radice.rglob("*")):
         if not p.is_file() or SALTA_DIR & set(p.relative_to(radice).parts):
@@ -62,7 +66,7 @@ def scansiona(radice, eccezioni=None):
             continue
         trovati = set()
         for n, riga in enumerate(testo.splitlines(), 1):
-            for tipo, rx in REGOLE.items():
+            for tipo, rx in regole.items():
                 if tipo == "base64-lungo" and any(s in rel for s in SALTA_BASE64):
                     continue
                 if rx.search(riga):
@@ -84,6 +88,9 @@ class TestRilevatore(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
+        p = mock.patch.dict(os.environ, {"KIT_TERMINI_PERSONALI": "mario.rossi, mrossi"})
+        p.start()
+        self.addCleanup(p.stop)
 
     def _scrivi(self, nome, testo):
         p = Path(self.tmp.name) / nome
@@ -113,9 +120,17 @@ class TestRilevatore(unittest.TestCase):
         self._scrivi("a.txt", "versione 8.8.8.8 e 1.2.3.4")
         self.assertNotIn("ip-privato", self.tipi())
 
-    def test_percorso_e_nome_personale(self):
-        self._scrivi("a.txt", "/home/" + _NOME + "/x e " + _COGNOME.capitalize())
-        self.assertLessEqual({"percorso-personale", "nome-personale"}, self.tipi())
+    def test_percorsi_di_utenti_veri(self):
+        self._scrivi("a.txt", "/home/" "mrossi/x")
+        self.assertIn("percorso-personale", self.tipi())
+        self._scrivi("a.txt", "/home/utente/x e /home/<UTENTE>/y")
+        self.assertNotIn("percorso-personale", self.tipi())
+
+    def test_termini_personali_dalla_variabile(self):
+        self._scrivi("a.txt", "scritto da Mario.Rossi")
+        self.assertIn("nome-personale", self.tipi())
+        with mock.patch.dict(os.environ, {"KIT_TERMINI_PERSONALI": ""}):
+            self.assertNotIn("nome-personale", self.tipi())
 
     def test_base64_lungo_ma_non_nei_minificati(self):
         blob = "Zq9" * 20
@@ -145,7 +160,8 @@ class TestCartella(unittest.TestCase):
         per_tipo = {}
         for _, _, t in residui:
             per_tipo[t] = per_tipo.get(t, 0) + 1
-        print(f"\nresidui: {len(residui)} {per_tipo} | binari non scansionati: {len(binari)}")
+        print(f"\nresidui: {len(residui)} {per_tipo} | binari non scansionati: {len(binari)}"
+              f" | termini personali attivi: {bool(os.environ.get('KIT_TERMINI_PERSONALI'))}")
         for f, n, t in residui[:40]:
             print(f"  {f}:{n} {t}")
         self.assertEqual(residui, [])

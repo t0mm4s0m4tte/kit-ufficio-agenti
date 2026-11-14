@@ -122,7 +122,7 @@ def argomenti_claude(prompt_path: PurePath, cfg: Config) -> list[str]:
     if senza_strumenti(prompt_path):  # il prompt arriva da stdin: --tools "" non va seguito da un argomento
         return [cfg.claude_bin, "-p", "--output-format", "text", "--append-system-prompt-file", str(prompt_path),
                 "--tools", ""]
-    # "/" + percorso assoluto = forma "//home/..." delle regole di Claude Code.
+    # "/" + percorso assoluto = forma "//home/<percorso>" delle regole di Claude Code.
     # Le regole Read valgono anche per Grep/Glob, le Edit anche per Write: niente Grep/Glob
     # senza percorso, che varrebbero su tutto il Pi.
     vault, base, home = cfg.vault.as_posix(), cfg.base.as_posix(), cfg.base.parent.as_posix()

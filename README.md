@@ -15,7 +15,7 @@ Solo libreria standard di Python: nessun `pip install`.
 | Cosa | Stato |
 |---|---|
 | Test automatici (`python -m unittest discover -s tests`) | eseguiti su Windows 11 con Python 3.11 |
-| Installazione da zero seguendo questo README | vedi il report della prova (tempo misurato) |
+| Installazione da zero seguendo questo README | misurata dall'autore prima della pubblicazione; il risultato sta nelle note di rilascio |
 | Raspberry Pi con systemd (`deploy/ufficio.service`) | **non verificato**: scritto leggendo il codice |
 | Telegram reale | **non verificato** in questa versione |
 | Agenti con motore Claude o Gemini | **non verificato**: servono le tue chiavi |
@@ -87,6 +87,13 @@ Un ordine è un file di testo in `~/ufficio/vault/03 - Ordini di lavoro/` (es. `
 Nel kit v1 non c'è nessun esecutore: gli ordini si creano, si approvano e si firmano, ma non partono lavori automatici.
 La firma non sostituisce una revisione di sicurezza del tuo ambiente.
 
+## Sicurezza: leggi prima di esporre l'edificio
+
+L'edificio **non ha autenticazione**. Chiunque raggiunga la porta può scrivere agli agenti (`/api/chiedi`), cambiarne il motore
+e creare ordini, e può leggere le chat. Gli agenti con motore Claude possono eseguire comandi di shell sulla macchina
+che ospita il kit: una richiesta ostile o una prompt injection può quindi far eseguire comandi. Il default `WEB_HOST=127.0.0.1`
+ascolta solo in locale. Non metterlo su Internet; su una LAN usalo solo se ti fidi di tutti i dispositivi collegati.
+
 ## Cosa contiene
 
 - `portineria/`: bot, instradamento, ordini, server dell'edificio.
@@ -100,7 +107,12 @@ La firma non sostituisce una revisione di sicurezza del tuo ambiente.
 
 Niente prompt di terzi o già pronti, niente moduli personali (segretaria, coach, posta, calendario, palestra),
 niente esecutore remoto sul PC, niente Wake-on-LAN, niente pubblicazione su GitHub o Vercel, niente archivisti
-automatici, niente riunioni cross-piano, niente interfacce verso Obsidian.
+automatici, niente riunioni cross-piano.
+
+Restano nel codice alcuni ganci facoltativi, spenti di default: `ESECUTORE_URL` (worker remoto firmato che nel kit non c'è),
+`OMNIROUTE_*` (router di modelli), la sorgente `antigravity` della telemetria esterna, i link `obsidian://` e il
+generatore, che legge le definizioni di agenti installate nella tua cartella `~/.claude` se presente.
+Se non li usi, ignorali.
 
 ## Controllo prima di condividere la tua copia
 

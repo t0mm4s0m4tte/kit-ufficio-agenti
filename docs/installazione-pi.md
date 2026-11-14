@@ -1,7 +1,7 @@
 # Installazione su Raspberry Pi con systemd
 
 > **Non verificato su un Raspberry reale.** Questa guida è scritta leggendo il codice e l'unità systemd;
-> la prova di installazione del kit è stata fatta su PC (vedi il README e il report della prova).
+> la prova di installazione del kit è stata fatta su PC (vedi il README).
 > Sostituisci i segnaposto: `<UTENTE>` = l'utente Linux con cui gira il servizio, `<IP_DEL_TUO_PI>` = l'indirizzo del Pi.
 
 ## 1. Prerequisiti sul Pi
@@ -21,8 +21,8 @@ python3 -m unittest discover -s tests
 ```
 
 Apri `~/ufficio/.env` e compila i valori che ti servono. Se vuoi che l'edificio sia raggiungibile da un altro
-dispositivo, metti in `WEB_HOST` l'indirizzo `<IP_DEL_TUO_PI>` (oppure `0.0.0.0`, solo su una rete di cui ti fidi):
-l'edificio non ha autenticazione, quindi **non esporlo su Internet**.
+dispositivo, metti in `WEB_HOST` l'indirizzo `<IP_DEL_TUO_PI>` (proprio quello, non `0.0.0.0`: il controllo dell'Host lo rifiuterebbe).
+L'edificio non ha autenticazione e gli agenti Claude possono eseguire comandi sul Pi: **non esporlo su Internet** e usalo solo su una rete di cui ti fidi.
 
 ## 3. Avvio automatico con systemd
 

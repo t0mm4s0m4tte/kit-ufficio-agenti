@@ -99,26 +99,26 @@ class TestWeb(unittest.TestCase):
 
     def test_file_statici_media_e_range(self):
         statici = Path(self.tmp.name) / "statici"
-        (statici / "greta.webp").write_bytes(b"RIFFwebp")
-        (statici / "greta.jpg").write_bytes(b"\xff\xd8\xff\xe0")
-        (statici / "greta.mp4").write_bytes(b"0123456789abcdef")
+        (statici / "statico.webp").write_bytes(b"RIFFwebp")
+        (statici / "statico.jpg").write_bytes(b"\xff\xd8\xff\xe0")
+        (statici / "statico.mp4").write_bytes(b"0123456789abcdef")
 
-        for nome, mime in (("greta.webp", "image/webp"), ("greta.jpg", "image/jpeg"), ("greta.mp4", "video/mp4")):
+        for nome, mime in (("statico.webp", "image/webp"), ("statico.jpg", "image/jpeg"), ("statico.mp4", "video/mp4")):
             stato, header, _ = self.richiesta("GET", f"/{nome}")
             self.assertEqual((stato, header["Content-Type"]), (200, mime))
 
-        stato, header, corpo = self.richiesta("GET", "/greta.mp4", header={"Range": "bytes=0-3"})
+        stato, header, corpo = self.richiesta("GET", "/statico.mp4", header={"Range": "bytes=0-3"})
         self.assertEqual(stato, 206)
         self.assertEqual(header.get("Accept-Ranges"), "bytes")
         self.assertEqual(header.get("Content-Range"), "bytes 0-3/16")
         self.assertEqual(corpo, b"0123")
 
-        stato_suff, header_suff, corpo_suff = self.richiesta("GET", "/greta.mp4", header={"Range": "bytes=-4"})
+        stato_suff, header_suff, corpo_suff = self.richiesta("GET", "/statico.mp4", header={"Range": "bytes=-4"})
         self.assertEqual(stato_suff, 206)
         self.assertEqual(header_suff.get("Content-Range"), "bytes 12-15/16")
         self.assertEqual(corpo_suff, b"cdef")
 
-        stato_ko, header_ko, _ = self.richiesta("GET", "/greta.mp4", header={"Range": "bytes=99-120"})
+        stato_ko, header_ko, _ = self.richiesta("GET", "/statico.mp4", header={"Range": "bytes=99-120"})
         self.assertEqual(stato_ko, 416)
         self.assertEqual(header_ko.get("Content-Range"), "bytes */16")
 

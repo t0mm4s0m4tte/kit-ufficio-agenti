@@ -36,9 +36,12 @@ def main(argv: list[str] | None = None) -> int:
     else:
         righe[indice] = nuova
     args.env.parent.mkdir(parents=True, exist_ok=True)
-    args.env.write_text("\n".join(righe) + "\n", encoding="utf-8", newline="\n")
+    contenuto = (chr(10).join(righe) + chr(10)).encode("utf-8")
+    fd = os.open(args.env, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)  # su Windows il modo è ignorato
+    with os.fdopen(fd, "wb") as f:
+        f.write(contenuto)
     if os.name == "posix":
-        args.env.chmod(0o600)
+        args.env.chmod(0o600)  # se il file esisteva già con altri permessi
     print(f"Chiave scritta in {args.env} (non mostrata).")
     return 0
 

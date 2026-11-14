@@ -1,5 +1,10 @@
 __pycache__/
 *.pyc
 .env
+.env.*
+!deploy/env.esempio
+chiave.txt
+*.pem
+*.key
 stato/
 vault/
