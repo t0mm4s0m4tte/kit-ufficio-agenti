@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from pathlib import Path, PurePath
 
-OBBLIGATORIE = ("TELEGRAM_TOKEN", "TELEGRAM_USER_ID", "GEMINI_API_KEY")
+OBBLIGATORIE = ("ORDINI_HMAC_KEY",)  # Telegram e motori sono facoltativi: senza, resta solo l'edificio web
 
 
 @dataclass
@@ -17,7 +17,7 @@ class Config:
     omniroute_url: str = ""  # vuoto = niente OmniRoute, solo Gemini diretto
     omniroute_key: str = ""
     omniroute_model: str = "auto"
-    web_host: str = ""  # IP Tailscale del Pi; vuoto = edificio spento
+    web_host: str = ""  # indirizzo su cui ascolta l'edificio; vuoto = edificio spento
     web_porta: int = 8090
     ordini_hmac_key: str = ""  # chiave per firmare gli ordini approvati, solo nel .env
     esecutore_url: str = ""  # es. http://<IP_DEL_PC>:8771 per eseguire Claude sul PC quando è acceso
@@ -59,6 +59,9 @@ def carica_config(env_path: Path) -> Config:
     for chiave in OBBLIGATORIE:
         if not v.get(chiave):
             raise ValueError(f"manca {chiave} in {env_path}")
+    chiave_hmac = v["ORDINI_HMAC_KEY"]
+    if chiave_hmac.startswith("<") and chiave_hmac.endswith(">"):
+        raise ValueError(f"ORDINI_HMAC_KEY in {env_path} è ancora un segnaposto: generane una vera (vedi README)")
     try:
         web_porta = int(v.get("WEB_PORT") or 8090)
     except ValueError:
@@ -66,9 +69,9 @@ def carica_config(env_path: Path) -> Config:
     if not 1 <= web_porta <= 65535:
         raise ValueError("WEB_PORT deve essere fra 1 e 65535")
     return Config(
-        telegram_token=v["TELEGRAM_TOKEN"],
-        telegram_user_id=int(v["TELEGRAM_USER_ID"]),
-        gemini_api_key=v["GEMINI_API_KEY"],
+        telegram_token=v.get("TELEGRAM_TOKEN", ""),
+        telegram_user_id=int(v.get("TELEGRAM_USER_ID") or 0),
+        gemini_api_key=v.get("GEMINI_API_KEY", ""),
         gemini_model=v.get("GEMINI_MODEL") or "gemini-4-hydrogen",
         claude_bin=v.get("CLAUDE_BIN") or "claude",
         base=Path(v.get("UFFICIO_DIR") or Path.home() / "ufficio"),
@@ -78,6 +81,6 @@ def carica_config(env_path: Path) -> Config:
         omniroute_model=v.get("OMNIROUTE_MODEL") or "auto",
         web_host=v.get("WEB_HOST", ""),
         web_porta=web_porta,
-        ordini_hmac_key=v.get("ORDINI_HMAC_KEY", ""),
+        ordini_hmac_key=chiave_hmac,
         esecutore_url=v.get("ESECUTORE_URL", ""),
     )

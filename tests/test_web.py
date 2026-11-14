@@ -264,7 +264,7 @@ class TestWeb(unittest.TestCase):
 
 
 class TestConfigWeb(unittest.TestCase):
-    BASE = "TELEGRAM_TOKEN=t\nTELEGRAM_USER_ID=1\nGEMINI_API_KEY=g\n"
+    BASE = "TELEGRAM_TOKEN=t\nTELEGRAM_USER_ID=1\nGEMINI_API_KEY=g\nORDINI_HMAC_KEY=h\n"
 
     def _carica(self, extra: str):
         with tempfile.TemporaryDirectory() as d:

@@ -69,7 +69,7 @@ def avvia_edificio(avvia, host: str, porta: int, attesa: float = 30, dormi=time.
 def main() -> None:
     logging.basicConfig(level=logging.INFO, stream=sys.stdout,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    cfg = carica_config(Path(os.environ.get("UFFICIO_ENV", ".env")))
+    cfg = carica_config(Path(os.environ.get("UFFICIO_ENV") or Path.home() / "ufficio" / ".env"))
     stato = Path(cfg.stato)
     (stato / "chat").mkdir(parents=True, exist_ok=True)
     prepara_vault(Path(cfg.vault))

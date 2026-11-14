@@ -86,16 +86,29 @@ class TestRouter(unittest.TestCase):
         self.assertEqual(self.org.elenco_compatto([self.org.get("celia-cold-email")]),
                          "celia-cold-email | vendite | Cold email specialist")
 
-    def test_config_chiave_mancante(self):
+    def test_config_chiave_hmac_obbligatoria(self):
         env = self.dir / ".env"
-        env.write_text("TELEGRAM_USER_ID=5\nGEMINI_API_KEY=k\n", encoding="utf-8")
+        env.write_text("TELEGRAM_TOKEN=a\nTELEGRAM_USER_ID=5\nGEMINI_API_KEY=k\n", encoding="utf-8")
         with self.assertRaises(ValueError) as ctx:
             carica_config(env)
-        self.assertIn("TELEGRAM_TOKEN", str(ctx.exception))
+        self.assertIn("ORDINI_HMAC_KEY", str(ctx.exception))
+
+    def test_config_rifiuta_il_segnaposto_della_chiave(self):
+        env = self.dir / ".env"
+        env.write_text("ORDINI_HMAC_KEY=<CHIAVE_HMAC_DA_GENERARE>\n", encoding="utf-8")
+        with self.assertRaises(ValueError) as ctx:
+            carica_config(env)
+        self.assertIn("segnaposto", str(ctx.exception))
+
+    def test_config_telegram_e_motori_sono_facoltativi(self):
+        env = self.dir / ".env"
+        env.write_text("ORDINI_HMAC_KEY=chiave-di-prova\n", encoding="utf-8")
+        cfg = carica_config(env)
+        self.assertEqual((cfg.telegram_token, cfg.telegram_user_id, cfg.gemini_api_key), ("", 0, ""))
 
     def test_config_default_e_percorsi(self):
         env = self.dir / ".env"
-        env.write_text('# commento\n\nTELEGRAM_TOKEN="abc"\nTELEGRAM_USER_ID=5\nGEMINI_API_KEY=k\n', encoding="utf-8")
+        env.write_text('# commento\n\nTELEGRAM_TOKEN="abc"\nTELEGRAM_USER_ID=5\nGEMINI_API_KEY=k\nORDINI_HMAC_KEY=h\n', encoding="utf-8")
         cfg = carica_config(env)
         self.assertEqual((cfg.telegram_token, cfg.telegram_user_id), ("abc", 5))
         self.assertEqual(cfg.gemini_model, "gemini-4-hydrogen")
@@ -103,7 +116,7 @@ class TestRouter(unittest.TestCase):
         self.assertEqual(cfg.vault, Path.home() / "ufficio" / "vault")
         self.assertEqual(cfg.env_path, Path.home() / "ufficio" / ".env")
         self.assertEqual(cfg.claude_token, "")
-        env.write_text("TELEGRAM_TOKEN=a\nTELEGRAM_USER_ID=5\nGEMINI_API_KEY=k\nCLAUDE_CODE_OAUTH_TOKEN=xyz\n",
+        env.write_text("TELEGRAM_TOKEN=a\nTELEGRAM_USER_ID=5\nGEMINI_API_KEY=k\nORDINI_HMAC_KEY=h\nCLAUDE_CODE_OAUTH_TOKEN=xyz\n",
                        encoding="utf-8")
         self.assertEqual(carica_config(env).claude_token, "xyz")
 
