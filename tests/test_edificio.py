@@ -28,7 +28,7 @@ class TestEdificio(unittest.TestCase):
                 self.assertTrue(-PASSO * 2 <= a["x"] < piano["larghezza"] and -PASSO * 2 <= a["z"] < piano["profondita"], a["id"])
 
     def test_capo_nell_angolo_e_piu_grande(self):
-        piano = next(p for p in pianta(self.org)["piani"] if p["id"] == "marketing")
+        piano = next(p for p in pianta(self.org)["piani"] if p["id"] == "sviluppo")
         capo = next(a for a in piano["agenti"] if a["ruolo"] == "capo")
         self.assertEqual((capo["x"], capo["z"], capo["scala"]), (-4.0, -4.0, 1.5))
 
@@ -37,13 +37,8 @@ class TestEdificio(unittest.TestCase):
         self.assertEqual((direttore["x"], direttore["z"], direttore["scala"]), (-4.0, -4.0, 1.8))
 
     def test_piani_dall_alto(self):
-        self.assertEqual([p["numero"] for p in pianta(self.org)["piani"]], list(range(10, 0, -1)) + [-1])
+        self.assertEqual([p["numero"] for p in pianta(self.org)["piani"]], [10, 2, 1])
 
-
-    def test_comanager_apre_il_gruppo(self):
-        piano = next(p for p in pianta(self.org)["piani"] if p["id"] == "marketing")
-        com = next(a for a in piano["agenti"] if a["ruolo"] == "comanager" and a["team"] == "cina")
-        self.assertEqual((com["x"], com["z"], com["scala"]), (0.0, 0.0, 1.2))
 
     def test_agente_su_piano_inesistente_da_errore(self):
         org = Organigramma({
@@ -69,11 +64,11 @@ class TestEdificio(unittest.TestCase):
                 f = vault / rel
                 f.parent.mkdir(parents=True, exist_ok=True)
                 f.write_text("x", encoding="utf-8")
-            s = stanze(vault, "100.113.116.92")
+            s = stanze(vault, "198.51.100.2")
             self.assertEqual([x["id"] for x in s], ["commesse", "palestra", "finanza", "archivio"])
             self.assertEqual(s[0]["link"], [{"testo": "Shopify", "url": "obsidian://open?vault=Ufficio&file=01%20-%20Commesse/Shopify"}])
-            self.assertEqual(s[1]["link"][0]["url"], "http://100.113.116.92:3100")
-            self.assertEqual(s[2]["link"][0]["url"], "http://100.113.116.92:8080")
+            self.assertEqual(s[1]["link"][0]["url"], "http://198.51.100.2:3100")
+            self.assertEqual(s[2]["link"][0]["url"], "http://198.51.100.2:8080")
             testi = [l["testo"] for l in s[3]["link"]]
             self.assertNotIn("x", testi)
             self.assertNotIn("y", testi)

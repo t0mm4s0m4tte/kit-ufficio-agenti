@@ -63,17 +63,17 @@ class TestGeneratoreCli(unittest.TestCase):
         self.assertFalse((self.out / "prompts" / "direttore.md").exists())
         self.assertEqual((self.out / "prompts" / "_direttore.md").read_text(encoding="utf-8"), "PROMPT DIRETTORE")
 
-    def test_archivisti_sintetici(self):
-        (self.out / "prompts" / "_bibliotecario.md").write_text("MIO", encoding="utf-8")
+    def test_agenti_sintetici(self):
+        (self.out / "prompts" / "_redattore.md").write_text("MIO", encoding="utf-8")
         self.assertEqual(self.esegui(), 0)
         org = json.loads((self.out / "organigramma.json").read_text(encoding="utf-8"))
         per_id = {a["id"]: a for a in org["agenti"]}
-        for i in ("archivista-notturno", "archivista-fonti", "bibliotecario", "capo-archivista"):
+        for i in ("capo-sviluppo", "sviluppatore", "redattore", "capo-contenuti"):
             self.assertEqual(per_id[i]["prompt_path"], f"prompts/_{i}.md")
             self.assertEqual(per_id[i]["fonte"], "ufficio")
-        self.assertEqual(per_id["bibliotecario"]["nome"], "Bibliotecario")
-        self.assertEqual((self.out / "prompts" / "_bibliotecario.md").read_text(encoding="utf-8"), "MIO")
-        self.assertFalse((self.out / "prompts" / "bibliotecario.md").exists())
+        self.assertEqual(per_id["redattore"]["nome"], "Redattore")
+        self.assertEqual((self.out / "prompts" / "_redattore.md").read_text(encoding="utf-8"), "MIO")
+        self.assertFalse((self.out / "prompts" / "redattore.md").exists())
 
     def test_errori_bloccano_la_scrittura(self):
         self.scrivi_gerarchia("nessuno-cosi")

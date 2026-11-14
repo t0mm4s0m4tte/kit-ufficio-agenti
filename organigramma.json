@@ -1,0 +1,94 @@
+{
+ "generato": "2026-11-14T16:29:07",
+ "piani": [
+  {
+   "id": "direzione",
+   "numero": 10,
+   "nome": "Direzione",
+   "emoji": "🏛",
+   "colore": "#c9a227",
+   "capo": "direttore",
+   "team": []
+  },
+  {
+   "id": "sviluppo",
+   "numero": 2,
+   "nome": "Sviluppo",
+   "emoji": "💻",
+   "colore": "#3b82c4",
+   "capo": "capo-sviluppo",
+   "team": []
+  },
+  {
+   "id": "contenuti",
+   "numero": 1,
+   "nome": "Contenuti",
+   "emoji": "✍️",
+   "colore": "#4aa36b",
+   "capo": "capo-contenuti",
+   "team": []
+  }
+ ],
+ "agenti": [
+  {
+   "id": "direttore",
+   "nome": "Direttore",
+   "descrizione": "Dirige l'ufficio e smista il lavoro ai reparti.",
+   "piano": "direzione",
+   "team": null,
+   "ruolo": "direttore",
+   "capo": null,
+   "motore": "claude",
+   "fonte": "ufficio",
+   "prompt_path": "prompts/_direttore.md"
+  },
+  {
+   "id": "capo-sviluppo",
+   "nome": "Capo Sviluppo",
+   "descrizione": "Scompone le richieste tecniche in passi verificabili.",
+   "piano": "sviluppo",
+   "team": null,
+   "ruolo": "capo",
+   "capo": "direttore",
+   "motore": "claude",
+   "fonte": "ufficio",
+   "prompt_path": "prompts/_capo-sviluppo.md"
+  },
+  {
+   "id": "sviluppatore",
+   "nome": "Sviluppatore",
+   "descrizione": "Scrive codice semplice e testato.",
+   "piano": "sviluppo",
+   "team": null,
+   "ruolo": "operaio",
+   "capo": "capo-sviluppo",
+   "motore": "claude",
+   "fonte": "ufficio",
+   "prompt_path": "prompts/_sviluppatore.md"
+  },
+  {
+   "id": "capo-contenuti",
+   "nome": "Capo Contenuti",
+   "descrizione": "Definisce tono e struttura dei testi.",
+   "piano": "contenuti",
+   "team": null,
+   "ruolo": "capo",
+   "capo": "direttore",
+   "motore": "claude",
+   "fonte": "ufficio",
+   "prompt_path": "prompts/_capo-contenuti.md"
+  },
+  {
+   "id": "redattore",
+   "nome": "Redattore",
+   "descrizione": "Scrive testi chiari e onesti.",
+   "piano": "contenuti",
+   "team": null,
+   "ruolo": "operaio",
+   "capo": "capo-contenuti",
+   "motore": "gemini",
+   "fonte": "ufficio",
+   "prompt_path": "prompts/_redattore.md"
+  }
+ ]
+}

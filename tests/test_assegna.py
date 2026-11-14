@@ -201,26 +201,6 @@ class TestOrganigrammaReale(unittest.TestCase):
             self.assertTrue((self.radice / a["prompt_path"]).is_file(),
                             f"prompt mancante: {a['prompt_path']}")
 
-    def test_assunti_da_github_presenti(self):
-        per_id = {a["id"]: a for a in self.org["agenti"]}
-        piani = {p["id"] for p in self.org["piani"]}
-        for aid in ASSUNTI_GITHUB:
-            self.assertIn(aid, per_id.keys(), f"agente mancante: {aid}")
-            ag = per_id[aid]
-            self.assertIn(ag["piano"], piani)
-            self.assertIn(ag["capo"], per_id.keys())
-
-    def test_assunti_3d_presenti_e_smistati_nei_team(self):
-        per_id = {a["id"]: a for a in self.org["agenti"]}
-        piani = {p["id"] for p in self.org["piani"]}
-        for aid, (piano_atteso, team_atteso) in ASSUNTI_3D.items():
-            self.assertIn(aid, per_id.keys(), f"agente 3D mancante: {aid}")
-            ag = per_id[aid]
-            self.assertIn(ag["piano"], piani)
-            self.assertEqual(ag["piano"], piano_atteso, f"{aid}: piano errato")
-            self.assertEqual(ag.get("team"), team_atteso, f"{aid}: team errato")
-            self.assertIn(ag["capo"], per_id.keys())
-
 
 if __name__ == "__main__":
     unittest.main()

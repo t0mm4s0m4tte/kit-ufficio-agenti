@@ -1,0 +1,30 @@
+# Esempio minimo: 3 piani e 5 agenti (prompt scritti a mano in prompts/_<id>.md).
+# Aggiungi piani e agenti qui, poi rigenera l'organigramma con: python -m generatore
+[ufficio]
+piano_default = "contenuti"
+
+[piani.direzione]
+numero = 10
+nome = "Direzione"
+emoji = "🏛"
+colore = "#c9a227"
+capo = "direttore"
+motore_operai = "claude"
+
+[piani.sviluppo]
+numero = 2
+nome = "Sviluppo"
+emoji = "💻"
+colore = "#3b82c4"
+capo = "capo-sviluppo"
+motore_operai = "claude"
+agenti = ["sviluppatore"]
+
+[piani.contenuti]
+numero = 1
+nome = "Contenuti"
+emoji = "✍️"
+colore = "#4aa36b"
+capo = "capo-contenuti"
+motore_operai = "gemini"
+agenti = ["redattore"]
