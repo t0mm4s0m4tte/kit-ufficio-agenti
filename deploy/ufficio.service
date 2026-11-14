@@ -1,0 +1,15 @@
+[Unit]
+Description=Kit Ufficio Agenti - Portineria
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=<UTENTE>
+WorkingDirectory=/home/<UTENTE>/ufficio/app
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 -m portineria
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
