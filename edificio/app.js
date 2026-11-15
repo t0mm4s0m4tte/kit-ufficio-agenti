@@ -2113,7 +2113,7 @@ function schedaAgente(d, corpo, aggiorna) {
   return mostra;
 }
 
-// su http:// via Tailscale navigator.clipboard non c'e': si mostra il comando gia' selezionato
+// su http:// (non sicuro) navigator.clipboard non c'e': si mostra il comando gia' selezionato
 function copiaComando(comando) {
   const zona = el('div', 'copia');
   const TESTO = 'Copia comando Claude Code';

@@ -23,7 +23,7 @@ TTL_MIN = 10
 TTL_MAX = 900
 AZIONI_VALIDE = ("avvia", "lavora", "coda", "fine", "errore", "pulisci")
 TIPI_FLUSSO = ("delega", "riunione", "staffetta", "esterna")
-_ENV_DEFAULT = Path.home() / ".ufficio" / "env"
+_ENV_DEFAULT = Path.home() / "ufficio" / ".env"
 
 
 def _pulisci_testo(val: str, max_len: int) -> str:

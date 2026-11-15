@@ -202,7 +202,7 @@ def _esecutore_raggiungibile(url: str, timeout: float = 2.0) -> bool:
 
 
 def chiedi_claude_pc(prompt_path: PurePath, storia: list[dict], testo: str, cfg: Config, post=_post_json) -> str:
-    """Invia una richiesta Claude al worker HTTP sul PC Windows tramite Tailscale con firma HMAC."""
+    """Invia una richiesta Claude a un worker HTTP remoto (ESECUTORE_URL, facoltativo) con firma HMAC."""
     if post is _post_json and not _esecutore_raggiungibile(cfg.esecutore_url):
         raise _EsecutoreNonRaggiungibile("PC non raggiungibile")
     sistema = Path(prompt_path).read_text(encoding="utf-8", errors="replace")

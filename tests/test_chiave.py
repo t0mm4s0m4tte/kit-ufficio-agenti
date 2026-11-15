@@ -1,6 +1,8 @@
 import contextlib
 import io
+import os
 import re
+import stat
 import tempfile
 import unittest
 from pathlib import Path
@@ -56,6 +58,23 @@ class TestChiave(unittest.TestCase):
         prima = self.valore()
         self.esegui("--forza")
         self.assertNotEqual(prima, self.valore())
+
+
+    @unittest.skipUnless(os.name == "posix", "permessi POSIX")
+    def test_permessi_600_anche_se_il_file_esisteva_largo(self):
+        self.env.write_text("ORDINI_HMAC_KEY=<CHIAVE_HMAC_DA_GENERARE>" + chr(10), encoding="utf-8")
+        os.chmod(self.env, 0o644)
+        self.assertEqual(self.esegui()[0], 0)
+        self.assertEqual(stat.S_IMODE(os.stat(self.env).st_mode), 0o600)
+
+    @unittest.skipUnless(os.name == "posix", "symlink POSIX")
+    def test_non_segue_i_symlink(self):
+        bersaglio = Path(self.tmp.name) / "altro.txt"
+        bersaglio.write_text("intatto", encoding="utf-8")
+        os.symlink(bersaglio, self.env)
+        with self.assertRaises(OSError):
+            self.esegui()
+        self.assertEqual(bersaglio.read_text(encoding="utf-8"), "intatto")
 
 
 if __name__ == "__main__":

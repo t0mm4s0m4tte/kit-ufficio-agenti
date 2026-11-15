@@ -43,10 +43,10 @@ journalctl -u ufficio -f
 ## 4. Verifica
 
 ```bash
-curl -s http://127.0.0.1:8090/api/stato
+curl -s http://<IP_DEL_TUO_PI>:8090/api/stato
 ```
 
-Deve rispondere con JSON. Poi apri `http://<IP_DEL_TUO_PI>:8090` dal browser (se hai cambiato `WEB_HOST`).
+Deve rispondere con JSON. Con il default `WEB_HOST=127.0.0.1` usa invece `http://127.0.0.1:8090`. Poi apri `http://<IP_DEL_TUO_PI>:8090` dal browser (se hai cambiato `WEB_HOST`).
 
 ## Aggiornare
 

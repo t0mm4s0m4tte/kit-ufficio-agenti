@@ -40,7 +40,7 @@ def elabora(msg: dict | None, user_id: int, tg, ufficio, gruppi) -> None:
 
 def avvia_edificio(avvia, host: str, porta: int, attesa: float = 30, dormi=time.sleep) -> threading.Thread:
     """Accende l'edificio in un thread a parte, cosi' Telegram parte subito. Dopo un riavvio del Pi
-    l'IP Tailscale puo' non esserci ancora (OSError): si ritenta ogni `attesa` s. Gli altri errori
+    l'indirizzo scelto in WEB_HOST puo' non esserci ancora (OSError): si ritenta ogni `attesa` s. Gli altri errori
     (porta impossibile, organigramma rotto) non si risolvono da soli: log e basta."""
     def giro():
         tentativi = 0

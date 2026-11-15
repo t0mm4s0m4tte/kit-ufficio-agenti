@@ -1,4 +1,4 @@
-"""Server web dell'edificio: pagina statica + API JSON, solo sull'IP Tailscale del Pi."""
+"""Server web dell'edificio: pagina statica + API JSON, di default solo in locale (127.0.0.1)."""
 import json
 import logging
 import threading

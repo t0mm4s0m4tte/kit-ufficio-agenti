@@ -15,7 +15,7 @@ Solo libreria standard di Python: nessun `pip install`.
 | Cosa | Stato |
 |---|---|
 | Test automatici (`python -m unittest discover -s tests`) | eseguiti su Windows 11 con Python 3.11 |
-| Installazione da zero seguendo questo README | misurata dall'autore prima della pubblicazione; il risultato sta nelle note di rilascio |
+| Installazione da zero seguendo questo README | eseguita su Windows 11 in meno di 20 secondi di esecuzione (tutti i comandi, test inclusi): misura fatta da uno script, non da una persona che legge; il tempo umano non è stato misurato |
 | Raspberry Pi con systemd (`deploy/ufficio.service`) | **non verificato**: scritto leggendo il codice |
 | Telegram reale | **non verificato** in questa versione |
 | Agenti con motore Claude o Gemini | **non verificato**: servono le tue chiavi |
@@ -88,6 +88,7 @@ Un ordine è un file di testo in `~/ufficio/vault/03 - Ordini di lavoro/` (es. `
    Stampa `approvato True` se la firma è valida. Non stampa la chiave.
 3. **Firma**: HMAC-SHA256, con la tua `ORDINI_HMAC_KEY`, sul codice dell'ordine, la destinazione e il testo del piano. Chi esegue l'ordine ricalcola la firma e lo rifiuta se qualcosa è cambiato dopo l'approvazione.
 4. Un ordine non approvato entro 24 ore scade e viene annullato.
+5. La stessa chiave firma anche la telemetria esterna (`/api/telemetria-esterna`) e le richieste all'esecutore: chi la possiede può firmare anche gli ordini, e le richieste firmate restano riutilizzabili per una finestra di 120 secondi (non c'è un nonce). Non darla a dispositivi che non devono poter approvare ordini.
 
 Nel kit v1 non c'è nessun esecutore: gli ordini si creano, si approvano e si firmano, ma non partono lavori automatici.
 La firma non sostituisce una revisione di sicurezza del tuo ambiente.
@@ -117,7 +118,7 @@ automatici, niente riunioni cross-piano.
 Restano nel codice alcuni ganci facoltativi, spenti di default: `ESECUTORE_URL` (worker remoto firmato che nel kit non c'è),
 `OMNIROUTE_*` (router di modelli), la sorgente `antigravity` della telemetria esterna, i link `obsidian://` e il
 generatore, che legge le definizioni di agenti installate nella tua cartella `~/.claude` se presente.
-Se non li usi, ignorali.
+Se non li usi, ignorali. Attenzione a `ESECUTORE_URL`: se lo accendi, il token `CLAUDE_CODE_OAUTH_TOKEN` viaggia in chiaro su http verso quell'indirizzo; usalo solo su una rete fidata o dentro un tunnel cifrato.
 
 ## Controllo prima di condividere la tua copia
 
