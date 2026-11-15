@@ -28,7 +28,8 @@ Solo libreria standard di Python: nessun `pip install`.
 
 ## Installazione
 
-I comandi sono scritti per Linux/Raspberry Pi (`python3`) e, dove cambiano, per PowerShell su Windows (`python`).
+I comandi sono scritti per Linux/Raspberry Pi (`python3`, `curl`) e, dove cambiano, per PowerShell su Windows.
+**Su Windows usa `python` al posto di `python3` e `curl.exe` al posto di `curl`** in tutti i comandi (in PowerShell `curl` è un alias che non accetta `-s`).
 Le cartelle sono quelle di default: tutto sta in `~/ufficio` (Windows: `$HOME\ufficio`), con il codice in `~/ufficio/app`.
 
 1. **Scarica il kit** in `~/ufficio/app`:
@@ -75,8 +76,12 @@ Le cartelle sono quelle di default: tutto sta in `~/ufficio` (Windows: `$HOME\uf
 
 Un ordine è un file di testo in `~/ufficio/vault/03 - Ordini di lavoro/` (es. `L-001.md`).
 
-1. **Bozza**: lo crei dalla scheda di un agente nell'edificio ("crea ordine"), oppure con `POST /api/ordine`, oppure su Telegram con `/ordine`.
-2. **Approvazione**: su Telegram `/approva L-001`; senza Telegram, da riga di comando:
+1. **Bozza**: su Telegram con `/ordine`, oppure senza Telegram con questo comando (dalla cartella `~/ufficio/app`, con la portineria avviata):
+   ```bash
+   python3 -c "import urllib.request, json; r = urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8090/api/ordine', data=json.dumps({'agente': 'redattore', 'testo': 'Scrivi tre righe di prova', 'titolo': 'Prova'}).encode(), headers={'Content-Type': 'application/json'})); print(r.status, r.read().decode())"
+   ```
+   Risponde `200 {"ok": true, "id": "L-001", "stato": "piano"}`: il primo ordine è `L-001`, i successivi `L-002`, ecc.
+2. **Approvazione**: su Telegram `/approva L-001`; senza Telegram, sempre dalla cartella `~/ufficio/app`:
    ```bash
    python3 -c "from pathlib import Path; from portineria.config import carica_config; from portineria.ordini import approva_ordine, verifica_firma; c = carica_config(Path.home()/'ufficio'/'.env'); o = approva_ordine(c.vault, 'L-001', c.ordini_hmac_key); print(o['stato'], verifica_firma(o, c.ordini_hmac_key))"
    ```
