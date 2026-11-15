@@ -295,7 +295,7 @@ def _demo() -> None:
     repo = Path(__file__).resolve().parent.parent
     tmp = Path(tempfile.mkdtemp(prefix="edificio-demo-"))
     (tmp / "vault" / "01 - Commesse").mkdir(parents=True)
-    for nome in ("Shopify", "Roblox"):
+    for nome in ("Sito", "Gioco"):
         (tmp / "vault" / "01 - Commesse" / f"{nome}.md").write_text(f"# {nome}\n", encoding="utf-8")
     avvisi = AvvisiWeb()
 
@@ -352,7 +352,7 @@ def _demo() -> None:
                         if agente:
                             self._eventi[agente["piano"]] = {
                                 "testo": f"{agente['nome']}: al lavoro",
-                                "commessa": "Shopify" if "shopify" in testo.lower() else "",
+                                "commessa": "Sito" if "sito" in testo.lower() else "",
                                 "agente": agente_id,
                                 "t": datetime.now().isoformat(timespec="seconds"),
                             }
@@ -369,7 +369,7 @@ def _demo() -> None:
                         if agente:
                             self._eventi[agente["piano"]] = {
                                 "testo": f"{agente['nome']}: completato",
-                                "commessa": "Shopify" if "shopify" in testo.lower() else "",
+                                "commessa": "Sito" if "sito" in testo.lower() else "",
                                 "agente": agente_id,
                                 "t": datetime.now().isoformat(timespec="seconds"),
                             }
@@ -378,15 +378,15 @@ def _demo() -> None:
         def direttore(self, testo, chat_id, thread_id):
             # il Direttore vero risponde con una riga JSON: la pagina la deve mostrare in chiaro
             delega = "passa" in testo.lower()
-            uscita = {"agente": "engineering-code-reviewer", "brief": "Dai un'occhiata al codice."} \
+            uscita = {"agente": "revisore-codice", "brief": "Dai un'occhiata al codice."} \
                 if delega else {"risposta": "Risposta di prova del Direttore."}
             flusso = {
                 "da_agente": "direttore",
                 "da_piano": "direzione",
-                "a_agente": "engineering-code-reviewer",
+                "a_agente": "revisore-codice",
                 "a_piano": "engineering",
                 "tipo": "delega",
-                "commessa": "Shopify" if "shopify" in testo.lower() else "",
+                "commessa": "Sito" if "sito" in testo.lower() else "",
             } if delega else None
             self.chiedi("direttore", testo, chat_id, thread_id, risposta=json.dumps(uscita, ensure_ascii=False),
                         flusso=flusso)

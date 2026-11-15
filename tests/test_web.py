@@ -180,7 +180,7 @@ class TestWeb(unittest.TestCase):
             "agente": "celia",
             "titolo": "Nuova landing",
             "testo": "Crea la hero section",
-            "commessa": "Shopify",
+            "commessa": "Sito",
             "stato": "approvato",
             "firma": "tentativo-falso",
         })
@@ -194,7 +194,7 @@ class TestWeb(unittest.TestCase):
         self.assertEqual(ordine["agente"], "celia")
         self.assertEqual(ordine["titolo"], "Nuova landing")
         self.assertEqual(ordine["piano"], "Crea la hero section")
-        self.assertEqual(ordine["commessa"], "Shopify")
+        self.assertEqual(ordine["commessa"], "Sito")
 
     def test_crea_ordine_input_sbagliati(self):
         casi = [
@@ -226,10 +226,10 @@ class TestWeb(unittest.TestCase):
             "a_agente": "celia",
             "a_piano": "vendite",
             "tipo": "delega",
-            "commessa": "Shopify",
+            "commessa": "Sito",
         }]
         self.ufficio.eventi = {
-            "vendite": {"testo": "Celia: al lavoro", "commessa": "Shopify", "agente": "celia", "t": "2026-11-11T19:00:00"}
+            "vendite": {"testo": "Celia: al lavoro", "commessa": "Sito", "agente": "celia", "t": "2026-11-11T19:00:00"}
         }
         dati = self.json("GET", "/api/stato")
         self.assertEqual(dati["flussi"], self.ufficio.flussi)

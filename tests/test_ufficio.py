@@ -13,11 +13,11 @@ from portineria.ufficio import Motori, Ufficio, firma, interpreta_responsabile
 from tests.test_router import PIANI, agente
 
 PIANI_UFF = PIANI + [{"id": "engineering", "numero": 6, "nome": "Engineering", "emoji": "💻", "colore": "",
-                      "capo": "engineering-software-architect", "team": []}]
+                      "capo": "capo-sviluppo", "team": []}]
 AGENTI_UFF = [
     agente("direttore", "Direttore", "direzione", "direttore", motore="claude"),
     agente("celia-cold-email", "Celia", "vendite", descrizione="Cold email specialist"),
-    agente("engineering-software-architect", "Software Architect", "engineering", "capo", motore="claude"),
+    agente("capo-sviluppo", "Software Architect", "engineering", "capo", motore="claude"),
 ]
 
 
@@ -89,9 +89,9 @@ class TestUfficio(BaseUfficio):
         self.assertEqual([m["testo"] for m in self.chiamate_gemini[1][1]], ["primo", "risposta gemini"])
 
     def test_agente_claude_riceve_il_percorso(self):
-        self.uff.gestisci(1, "@engineering-software-architect progetta")
+        self.uff.gestisci(1, "@capo-sviluppo progetta")
         self.attendi_coda()
-        self.assertEqual(self.chiamate_claude[0][0], self.cfg.app / "prompts/engineering-software-architect.md")
+        self.assertEqual(self.chiamate_claude[0][0], self.cfg.app / "prompts/capo-sviluppo.md")
         self.assertTrue(self.inviati[-1][1].startswith("💻 Software Architect · capo Engineering\n\n"))
 
     def test_direttore_delega(self):
@@ -138,7 +138,7 @@ class TestUfficio(BaseUfficio):
         blocco = threading.Event()
         self.coda.accoda("altro", blocco.wait, lambda r, e: None)
         aspetta(lambda: self.coda.stato()["in_corso"] == "altro")
-        self.uff.gestisci(1, "@engineering-software-architect x")
+        self.uff.gestisci(1, "@capo-sviluppo x")
         self.assertEqual(self.testi(), ["⏳ In coda, posizione 1."])
         blocco.set()
         self.attendi_coda()
@@ -150,7 +150,7 @@ class TestUfficio(BaseUfficio):
         blocco = threading.Event()
         coda.accoda("altro", blocco.wait, lambda r, e: None)
         aspetta(lambda: coda.stato()["in_corso"] == "altro")
-        uff.gestisci(1, "@engineering-software-architect x")
+        uff.gestisci(1, "@capo-sviluppo x")
         self.assertEqual(self.testi(), ["Coda piena, riprova tra poco."])
         blocco.set()
 
@@ -163,7 +163,7 @@ class TestUfficio(BaseUfficio):
 
     def test_limite_claude_e_comando_gemini(self):
         self.risposte_claude = [LimiteClaude("usage limit reached")]
-        self.uff.gestisci(1, "@engineering-software-architect progetta")
+        self.uff.gestisci(1, "@capo-sviluppo progetta")
         self.attendi_coda()
         self.assertIn("/gemini", self.testi()[-1])
         self.assertIn("usage limit reached", self.testi()[-1])
@@ -175,7 +175,7 @@ class TestUfficio(BaseUfficio):
 
     def test_timeout_e_stato(self):
         self.risposte_claude = [TimeoutAgente("t")]
-        self.uff.gestisci(1, "@engineering-software-architect x")
+        self.uff.gestisci(1, "@capo-sviluppo x")
         self.attendi_coda()
         self.assertEqual(self.testi()[-1], "Software Architect ci ha messo più di 5 minuti, lavoro interrotto.")
         self.uff.gestisci(1, "/stato")
@@ -299,8 +299,8 @@ class TestAttiviEMotore(BaseUfficio):
 
     def test_flussi_attivi_ed_eventi_piano_durante_delega(self):
         (self.cfg.vault / "01 - Commesse").mkdir(parents=True, exist_ok=True)
-        (self.cfg.vault / "01 - Commesse" / "Shopify.md").write_text("# Shopify\n", encoding="utf-8")
-        self.risposte_claude = ['{"agente": "celia-cold-email", "brief": "Scrivi per Shopify"}']
+        (self.cfg.vault / "01 - Commesse" / "Sito.md").write_text("# Sito\n", encoding="utf-8")
+        self.risposte_claude = ['{"agente": "celia-cold-email", "brief": "Scrivi per Sito"}']
         entra, esci = threading.Event(), threading.Event()
 
         def gemini(sistema, storia, testo):
@@ -309,7 +309,7 @@ class TestAttiviEMotore(BaseUfficio):
             return "fatto"
 
         self.uff.motori.gemini = gemini
-        t = threading.Thread(target=self.uff.gestisci, args=(1, "prepara mail per Shopify"))
+        t = threading.Thread(target=self.uff.gestisci, args=(1, "prepara mail per Sito"))
         t.start()
         self.assertTrue(entra.wait(2))
         flussi = self.uff.flussi_attivi()

@@ -40,7 +40,7 @@ class TestOrdini(unittest.TestCase):
         self._tmp.cleanup()
 
     def test_creazione_progressiva_e_lettura(self):
-        o1 = crea_ordine(self.vault, "engineering-software-architect", "Crea index.html",
+        o1 = crea_ordine(self.vault, "capo-sviluppo", "Crea index.html",
                          titolo="Landing X", commessa="Sito", destinazione="utente/sito", adesso=self.ora)
         o2 = crea_ordine(self.vault, "celia-cold-email", "Aggiorna copy", adesso=self.ora)
         self.assertEqual(o1["id"], "L-001")
@@ -63,13 +63,13 @@ class TestOrdini(unittest.TestCase):
             "---\nesecuzione: cantiere\nrepo: utente/landing-page\n---\n# Landing\n",
             encoding="utf-8",
         )
-        o = crea_ordine(self.vault, "engineering-software-architect", "Fai hero section",
+        o = crea_ordine(self.vault, "capo-sviluppo", "Fai hero section",
                         commessa="Landing", adesso=self.ora)
         self.assertEqual(o["esecuzione"], "cantiere")
         self.assertEqual(o["destinazione"], "utente/landing-page")
 
     def test_firma_hmac_valida_e_rifiuto_manomissioni(self):
-        o = crea_ordine(self.vault, "engineering-software-architect", "Piano originale",
+        o = crea_ordine(self.vault, "capo-sviluppo", "Piano originale",
                         destinazione="utente/repo", adesso=self.ora)
         self.assertFalse(verifica_firma(o, self.chiave))
 
@@ -226,10 +226,10 @@ class TestComandiOrdiniUfficio(unittest.TestCase):
         self.assertEqual(o["destinazione"], "progetti/landing-x")
         self.assertEqual(o["piano"], "Esegui npm test e build")
 
-        self.uff.gestisci(5, "/ordine @engineering-software-architect utente/repo | Aggiorna hero")
+        self.uff.gestisci(5, "/ordine @capo-sviluppo utente/repo | Aggiorna hero")
         o2 = carica_ordine(self.cfg.vault, "L-002")
         self.assertEqual(o2["esecuzione"], "cantiere")
-        self.assertEqual(o2["agente"], "engineering-software-architect")
+        self.assertEqual(o2["agente"], "capo-sviluppo")
         self.assertEqual(o2["destinazione"], "utente/repo")
 
     def test_comandi_ordini_vietati_fuori_da_chat_privata_utente(self):

@@ -15,7 +15,7 @@ from tests.test_router import PIANI, agente
 
 PIANI_ST = PIANI + [
     {"id": "engineering", "numero": 6, "nome": "Engineering", "emoji": "💻", "colore": "",
-     "capo": "engineering-software-architect", "team": []},
+     "capo": "capo-sviluppo", "team": []},
 ]
 
 AGENTI_ST = [
@@ -24,11 +24,11 @@ AGENTI_ST = [
     agente("marketing-copy", "Copywriter", "marketing", descrizione="Bozze landing e newsletter"),
     agente("sales-deal-strategist", "Deal Strategist", "vendite", "capo", motore="claude"),
     agente("celia-cold-email", "Celia", "vendite", descrizione="Cold email specialist"),
-    agente("engineering-software-architect", "Software Architect", "engineering", "capo", motore="claude"),
-    agente("engineering-backend-architect", "Backend Architect", "engineering", motore="claude"),
-    agente("testing-reality-checker", "Reality Checker", "engineering", motore="gemini",
+    agente("capo-sviluppo", "Software Architect", "engineering", "capo", motore="claude"),
+    agente("sviluppatore-backend", "Backend Architect", "engineering", motore="claude"),
+    agente("revisore-qualita", "Reality Checker", "engineering", motore="gemini",
            descrizione="QA e verifica finale"),
-    agente("security-architect", "Security Architect", "engineering", motore="claude",
+    agente("revisore-sicurezza", "Security Architect", "engineering", motore="claude",
            descrizione="Sicurezza, permessi, autenticazione"),
 ]
 
@@ -80,17 +80,17 @@ class TestStaffetta(unittest.TestCase):
         aspetta(lambda: self.coda.stato() == {"in_corso": None, "in_attesa": [], "attesa_ram": False})
 
     def test_scegli_revisore_coerente_per_piano_e_tema(self):
-        backend = self.org.get("engineering-backend-architect")
+        backend = self.org.get("sviluppatore-backend")
         self.assertEqual(
             scegli_revisore(self.org, backend, "aggiungi endpoint ordini")["id"],
-            "testing-reality-checker",
+            "revisore-qualita",
         )
         self.assertEqual(
             scegli_revisore(self.org, backend, "controlla sicurezza token HMAC e permessi")["id"],
-            "security-architect",
+            "revisore-sicurezza",
         )
-        # Se l'autore è già testing-reality-checker non rivede sé stesso
-        rc = self.org.get("testing-reality-checker")
+        # Se l'autore è già revisore-qualita non rivede sé stesso
+        rc = self.org.get("revisore-qualita")
         self.assertNotEqual(scegli_revisore(self.org, rc, "verifica")["id"], rc["id"])
 
         # Per gli altri piani sceglie il capo del piano; se autore è il capo, sale al Direttore
@@ -100,14 +100,14 @@ class TestStaffetta(unittest.TestCase):
         self.assertEqual(scegli_revisore(self.org, capo_vendite, "bozza")["id"], "direttore")
 
     def test_staffetta_via_chiedi_restituisce_solo_versione_finale_revisionata(self):
-        self.risposte["engineering-backend-architect"] = ["Bozza endpoint /api/ordini"]
-        self.risposte["testing-reality-checker"] = ["Versione finale verificata: /api/ordini OK"]
+        self.risposte["sviluppatore-backend"] = ["Bozza endpoint /api/ordini"]
+        self.risposte["revisore-qualita"] = ["Versione finale verificata: /api/ordini OK"]
 
-        self.uff.chiedi("engineering-backend-architect", "implementa /api/ordini", 5, None, revisione=True)
+        self.uff.chiedi("sviluppatore-backend", "implementa /api/ordini", 5, None, revisione=True)
         self._attendi()
 
         self.assertEqual([cid for cid, _ in self.chiamate],
-                         ["engineering-backend-architect", "testing-reality-checker"])
+                         ["sviluppatore-backend", "revisore-qualita"])
         self.assertIn("Bozza endpoint /api/ordini", self.chiamate[1][1])
         # A Operatore arriva SOLO la versione finale dopo la revisione (non la bozza intermedia)
         self.assertEqual(len(self.inviati), 1)
@@ -151,18 +151,18 @@ class TestStaffetta(unittest.TestCase):
 
     def test_comando_rivedi_senza_menzione_passa_al_direttore_con_revisione(self):
         self.risposte["direttore"] = [json.dumps({
-            "agente": "engineering-backend-architect",
+            "agente": "sviluppatore-backend",
             "brief": "Controlla query auth",
         })]
-        self.risposte["engineering-backend-architect"] = ["Bozza patch auth"]
-        self.risposte["security-architect"] = ["Patch auth verificata contro bypass"]
+        self.risposte["sviluppatore-backend"] = ["Bozza patch auth"]
+        self.risposte["revisore-sicurezza"] = ["Patch auth verificata contro bypass"]
 
         self.uff.gestisci(5, "/rivedi controlla sicurezza token auth")
         self._attendi()
 
         self.assertEqual(
             [cid for cid, _ in self.chiamate],
-            ["direttore", "engineering-backend-architect", "security-architect"],
+            ["direttore", "sviluppatore-backend", "revisore-sicurezza"],
         )
         self.assertIn("Patch auth verificata contro bypass", self.inviati[-1][1])
 

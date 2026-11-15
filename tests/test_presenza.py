@@ -27,12 +27,12 @@ PIANI_PRES = PIANI + [
     {"id": "design", "numero": 5, "nome": "Design & Prodotto", "emoji": "🎨", "colore": "#a855f7",
      "capo": "product-manager", "team": []},
     {"id": "engineering", "numero": 6, "nome": "Engineering", "emoji": "💻", "colore": "#3b82f6",
-     "capo": "engineering-software-architect", "team": []},
+     "capo": "capo-sviluppo", "team": []},
 ]
 AGENTI_PRES = [
     agente("direttore", "Direttore", "direzione", "direttore", motore="claude"),
     agente("design-ui-designer", "UI Designer", "design", "operaio", motore="claude"),
-    agente("engineering-software-architect", "Software Architect", "engineering", "capo", motore="claude"),
+    agente("capo-sviluppo", "Software Architect", "engineering", "capo", motore="claude"),
 ]
 
 
@@ -90,10 +90,10 @@ class TestRegistroPresenzeEsterni(unittest.TestCase):
 
     def test_pulisci_per_sorgente_o_totale(self):
         self.reg.aggiorna("avvia", agente_id="design-ui-designer", da_agente="direttore", sorgente="antigravity")
-        self.reg.aggiorna("avvia", agente_id="engineering-software-architect", sorgente="altro")
+        self.reg.aggiorna("avvia", agente_id="capo-sviluppo", sorgente="altro")
 
         self.reg.aggiorna("pulisci", sorgente="antigravity")
-        self.assertEqual(self.reg.attivi(), (["engineering-software-architect"], []))
+        self.assertEqual(self.reg.attivi(), (["capo-sviluppo"], []))
         self.assertEqual(self.reg.flussi(), [])
 
         self.reg.aggiorna("pulisci")
@@ -112,7 +112,7 @@ class TestRegistroPresenzeEsterni(unittest.TestCase):
             self.reg.aggiorna("avvia", agente_id="design-ui-designer", ttl=True)
 
         res_min = self.reg.aggiorna("avvia", agente_id="design-ui-designer", ttl=1)
-        res_max = self.reg.aggiorna("avvia", agente_id="engineering-software-architect", ttl=99_999)
+        res_max = self.reg.aggiorna("avvia", agente_id="capo-sviluppo", ttl=99_999)
         self.assertEqual(res_min["ttl"], TTL_MIN)
         self.assertEqual(res_max["ttl"], TTL_MAX)
 
@@ -169,9 +169,9 @@ class TestUfficioPresenzaEsterna(unittest.TestCase):
         self.assertEqual(self.uff.eventi_piani()["design"]["testo"], "UI Designer: completato")
         self.assertEqual(self.uff.telemetria.stato_agente("design-ui-designer")["gemini"], 1)
 
-        self.uff.presenza_esterna("errore", agente_id="engineering-software-architect", motore="claude")
+        self.uff.presenza_esterna("errore", agente_id="capo-sviluppo", motore="claude")
         self.assertEqual(self.uff.eventi_piani()["engineering"]["testo"], "Software Architect: errore")
-        self.assertEqual(self.uff.telemetria.stato_agente("engineering-software-architect")["errori"], 1)
+        self.assertEqual(self.uff.telemetria.stato_agente("capo-sviluppo")["errori"], 1)
 
 
 class TestClientPresenza(unittest.TestCase):

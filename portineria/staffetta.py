@@ -6,17 +6,17 @@ _PAROLE_SICUREZZA = (
     "hmac", "chiav", "segret", "vulnerab", "login", "bypass",
 )
 REVISORI_ENGINEERING = (
-    "testing-reality-checker",
-    "engineering-code-reviewer",
-    "ecc-code-reviewer",
-    "security-architect",
+    "revisore-qualita",
+    "revisore-codice",
+    "revisore-codice-2",
+    "revisore-sicurezza",
 )
 REVISORI_SICUREZZA = (
-    "security-architect",
-    "security-cloud-security-architect",
-    "testing-reality-checker",
-    "engineering-code-reviewer",
-    "ecc-code-reviewer",
+    "revisore-sicurezza",
+    "revisore-cloud",
+    "revisore-qualita",
+    "revisore-codice",
+    "revisore-codice-2",
 )
 
 

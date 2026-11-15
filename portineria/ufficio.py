@@ -331,7 +331,7 @@ class Ufficio:
 
     def _crea_ordine_da_chat(self, vault: Path, argomenti: str) -> str:
         t = (argomenti or "").strip()
-        agente_id = "engineering-software-architect" if self.org.get("engineering-software-architect") else "direttore"
+        agente_id = "capo-sviluppo" if self.org.get("capo-sviluppo") else "direttore"
         if t.startswith("@"):
             tok, _, resto = t[1:].partition(" ")
             trovati = self.org.risolvi(tok)
