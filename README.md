@@ -130,4 +130,4 @@ Il rapporto elenca file, riga e tipo, mai i valori trovati. Non sostituisce una 
 
 ## Licenza
 
-Da definire prima della pubblicazione.
+MIT: vedi il file `LICENSE`. Il codice di terzi incluso (three.js) ha la sua licenza, indicata in `THIRD_PARTY.md`.
