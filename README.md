@@ -35,9 +35,9 @@ Le cartelle sono quelle di default: tutto sta in `~/ufficio` (Windows: `$HOME\uf
 
 1. **Scarica il kit** in `~/ufficio/app`:
    ```bash
-   git clone <URL_DEL_REPOSITORY> ~/ufficio/app
+   git clone https://github.com/t0mm4s0m4tte/kit-ufficio-agenti.git ~/ufficio/app
    ```
-   PowerShell: `git clone <URL_DEL_REPOSITORY> "$HOME\ufficio\app"`.
+   PowerShell: `git clone https://github.com/t0mm4s0m4tte/kit-ufficio-agenti.git "$HOME\ufficio\app"`.
    Senza git: scarica lo zip del repository e scompattalo in quella cartella.
 
 2. **Crea il file di configurazione** a partire dal modello:

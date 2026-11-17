@@ -14,7 +14,7 @@ git --version
 ## 2. Installa il kit
 
 ```bash
-git clone <URL_DEL_REPOSITORY> ~/ufficio/app
+git clone https://github.com/t0mm4s0m4tte/kit-ufficio-agenti.git ~/ufficio/app
 cp ~/ufficio/app/deploy/env.esempio ~/ufficio/.env
 cd ~/ufficio/app && python3 -m portineria.chiave
 python3 -m unittest discover -s tests
