@@ -15,6 +15,7 @@ Solo libreria standard di Python: nessun `pip install`.
 | Cosa | Stato |
 |---|---|
 | Test automatici (`python -m unittest discover -s tests`) | eseguiti su Windows 11 con Python 3.11 |
+| Test automatici su Linux (Ubuntu, Python 3.13) | eseguiti: 242 ok, 1 saltato (`KIT_DIR`); inclusi i test POSIX dei permessi e dei symlink della chiave |
 | Installazione da zero seguendo questo README | eseguita su Windows 11 in meno di 20 secondi di esecuzione (tutti i comandi, test inclusi): misura fatta da uno script, non da una persona che legge; il tempo umano non è stato misurato |
 | Raspberry Pi con systemd (`deploy/ufficio.service`) | **non verificato**: scritto leggendo il codice |
 | Telegram reale | **non verificato** in questa versione |
